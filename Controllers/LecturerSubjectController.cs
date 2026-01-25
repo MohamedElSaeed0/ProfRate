@@ -9,11 +9,11 @@ namespace ProfRate.Controllers
     [ApiController]
     public class LecturerSubjectController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly ProfRate.Services.LecturerSubjectService _service;
 
-        public LecturerSubjectController(AppDbContext context)
+        public LecturerSubjectController(ProfRate.Services.LecturerSubjectService service)
         {
-            _context = context;
+            _service = service;
         }
 
         // GET: api/lecturersubjects/GetAll
@@ -21,10 +21,7 @@ namespace ProfRate.Controllers
         [Route("GetAll")]
         public async Task<IActionResult> GetAll()
         {
-            var list = await _context.LecturerSubjects
-                .Include(ls => ls.Lecturer)
-                .Include(ls => ls.Subject)
-                .ToListAsync();
+            var list = await _service.GetAll();
             return Ok(list);
         }
 
@@ -33,10 +30,7 @@ namespace ProfRate.Controllers
         [Route("GetByLecturer/{lecturerId}")]
         public async Task<IActionResult> GetByLecturer(int lecturerId)
         {
-            var list = await _context.LecturerSubjects
-                .Where(ls => ls.LecturerId == lecturerId)
-                .Include(ls => ls.Subject)
-                .ToListAsync();
+            var list = await _service.GetByLecturer(lecturerId);
             return Ok(list);
         }
 
@@ -45,10 +39,7 @@ namespace ProfRate.Controllers
         [Route("GetBySubject/{subjectId}")]
         public async Task<IActionResult> GetBySubject(int subjectId)
         {
-            var list = await _context.LecturerSubjects
-                .Where(ls => ls.SubjectId == subjectId)
-                .Include(ls => ls.Lecturer)
-                .ToListAsync();
+            var list = await _service.GetBySubject(subjectId);
             return Ok(list);
         }
 
@@ -57,23 +48,12 @@ namespace ProfRate.Controllers
         [Route("Add")]
         public async Task<IActionResult> Add([FromBody] ProfRate.DTOs.LecturerSubjectDTO model)
         {
-            var exists = await _context.LecturerSubjects
-                .AnyAsync(ls => ls.LecturerId == model.LecturerId && ls.SubjectId == model.SubjectId);
-            
-            if (exists)
+            var result = await _service.AddLecturerSubject(model);
+            if (!result.Success)
             {
-                return BadRequest(new { message = "هذا المحاضر معين بالفعل لهذه المادة" });
+                return BadRequest(new { message = result.Message });
             }
-
-            var entry = new LecturerSubject
-            {
-                LecturerId = model.LecturerId,
-                SubjectId = model.SubjectId
-            };
-
-            _context.LecturerSubjects.Add(entry);
-            await _context.SaveChangesAsync();
-            return Ok(new { message = "تم ربط المحاضر بالمادة بنجاح" });
+            return Ok(new { message = result.Message });
         }
 
         // DELETE: api/lecturersubjects/Delete/5
@@ -81,14 +61,11 @@ namespace ProfRate.Controllers
         [Route("Delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var entry = await _context.LecturerSubjects.FindAsync(id);
-            if (entry == null)
+            var success = await _service.DeleteLecturerSubject(id);
+            if (!success)
             {
                 return NotFound(new { message = "غير موجود" });
             }
-
-            _context.LecturerSubjects.Remove(entry);
-            await _context.SaveChangesAsync();
             return Ok(new { message = "تم الحذف بنجاح" });
         }
     }

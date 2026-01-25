@@ -52,8 +52,26 @@ namespace ProfRate.Controllers
         [Route("Add")]
         public async Task<IActionResult> AddEvaluation([FromBody] EvaluationDTO dto)
         {
-            var evaluation = await _evaluationService.AddEvaluation(dto);
-            return Ok(new { message = "تمت إضافة التقييم بنجاح", evaluation });
+            try
+            {
+                var evaluation = await _evaluationService.AddEvaluation(dto);
+                return Ok(new { message = "تمت إضافة التقييم بنجاح", evaluation });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // POST: api/evaluations/Reset
+        // إعادة ضبط التقييمات (للأدمن فقط)
+        [HttpPost]
+        [Route("Reset")]
+        // [Authorize(Roles = "Admin")] // يجب تفعيل هذا في الإنتاج
+        public async Task<IActionResult> ResetEvaluations()
+        {
+            var result = await _evaluationService.ResetEvaluations();
+            return Ok(new { message = result ? "تمت أرشفة التقييمات السابقة وبدء دورة جديدة بنجاح" : "لا توجد تقييمات نشطة للأرشفة" });
         }
     }
 }

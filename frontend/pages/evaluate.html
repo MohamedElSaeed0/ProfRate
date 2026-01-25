@@ -179,25 +179,37 @@
             }
 
             let hasRating = false;
+            let errorCount = 0;
+
             for (const q of questions) {
                 const rating = document.querySelector(`input[name="rating_${q.questionId}"]`).value;
                 if (rating > 0) {
                     hasRating = true;
-                    await EvaluationsAPI.add({
+                    const res = await EvaluationsAPI.add({
                         rating: parseInt(rating),
                         studentId: parseInt(studentId),
                         questionId: q.questionId,
                         lecturerId: parseInt(lecturerId),
                         subjectId: parseInt(subjectId)
                     });
+
+                    if (!res.success) {
+                        errorCount++;
+                    }
                 }
             }
 
-            if (hasRating) {
+            if (!hasRating) {
+                showAlert('الرجاء تقييم سؤال واحد على الأقل', 'danger');
+                return;
+            }
+
+            if (errorCount === 0) {
                 showAlert('تم إرسال التقييم بنجاح! شكراً لك.');
                 setTimeout(() => window.location.reload(), 2000);
             } else {
-                showAlert('الرجاء تقييم سؤال واحد على الأقل', 'danger');
+                showAlert(`تم حفظ التقييمات الجديدة. (ملاحظة: بعض الأسئلة تم تقييمها مسبقاً، لذا لم يتم تكرارها)`, 'info');
+                setTimeout(() => window.location.reload(), 3000);
             }
         });
 

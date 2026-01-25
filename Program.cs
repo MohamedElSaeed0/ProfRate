@@ -31,6 +31,8 @@ builder.Services.AddScoped<LecturerService>();
 builder.Services.AddScoped<EvaluationService>();
 builder.Services.AddScoped<QuestionService>();
 builder.Services.AddScoped<SubjectService>();
+builder.Services.AddScoped<StudentSubjectService>();
+builder.Services.AddScoped<LecturerSubjectService>();
 
 // 5. إضافة الـ JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -63,6 +65,9 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // ===== Configure the HTTP request pipeline =====
+
+// ===== Configure the HTTP request pipeline =====
+app.UseMiddleware<ProfRate.Middleware.ExceptionMiddleware>();
 
 // Swagger (للتطوير فقط)
 if (app.Environment.IsDevelopment())

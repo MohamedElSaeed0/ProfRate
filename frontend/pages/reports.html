@@ -130,10 +130,10 @@
                 allBody.innerHTML = all.data.map((e, i) => `
                     <tr>
                         <td>${i + 1}</td>
-                        <td>${e.student?.firstName || ''} ${e.student?.lastName || ''}</td>
-                        <td>${e.lecturer?.firstName || ''} ${e.lecturer?.lastName || ''}</td>
-                        <td>${e.subject?.subjectName || ''}</td>
-                        <td>${e.question?.questionText || ''}</td>
+                        <td>طالب</td>
+                        <td>${e.lecturerName || ''}</td>
+                        <td>${e.subjectName || ''}</td>
+                        <td>${e.questionText || ''}</td>
                         <td>${'★'.repeat(e.rating)}${'☆'.repeat(5 - e.rating)}</td>
                     </tr>
                 `).join('');

@@ -1,13 +1,28 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace ProfRate.DTOs
 {
     // DTO لإضافة/تعديل طالب
     public class StudentDTO
     {
         public int StudentId { get; set; }
+        
+        [Required(ErrorMessage = "الاسم الأول مطلوب")]
+        [StringLength(50, ErrorMessage = "الاسم يجب أن لا يزيد عن 50 حرف")]
         public string FirstName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "الاسم الأخير مطلوب")]
+        [StringLength(50, ErrorMessage = "الاسم يجب أن لا يزيد عن 50 حرف")]
         public string LastName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "اسم المستخدم مطلوب")]
+        [StringLength(50, MinimumLength = 3, ErrorMessage = "اسم المستخدم يجب أن يكون بين 3 و 50 حرف")]
         public string Username { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "كلمة المرور مطلوبة")]
+        [StringLength(100, MinimumLength = 6, ErrorMessage = "كلمة المرور يجب أن تكون 6 أحرف على الأقل")]
         public string Password { get; set; } = string.Empty;
+        
         public int AdminId { get; set; }
     }
 
@@ -15,10 +30,22 @@ namespace ProfRate.DTOs
     public class LecturerDTO
     {
         public int LecturerId { get; set; }
+        
+        [Required(ErrorMessage = "الاسم الأول مطلوب")]
+        [StringLength(50)]
         public string FirstName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "الاسم الأخير مطلوب")]
+        [StringLength(50)]
         public string LastName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "اسم المستخدم مطلوب")]
         public string Username { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "كلمة المرور مطلوبة")]
+        [MinLength(6, ErrorMessage = "كلمة المرور قصيرة جداً")]
         public string Password { get; set; } = string.Empty;
+        
         public int AdminId { get; set; }
     }
 
@@ -26,7 +53,10 @@ namespace ProfRate.DTOs
     public class QuestionDTO
     {
         public int QuestionId { get; set; }
+
+        [Required(ErrorMessage = "نص السؤال مطلوب")]
         public string QuestionText { get; set; } = string.Empty;
+        
         public int AdminId { get; set; }
     }
 
@@ -34,6 +64,8 @@ namespace ProfRate.DTOs
     public class SubjectDTO
     {
         public int SubjectId { get; set; }
+
+        [Required(ErrorMessage = "اسم المادة مطلوب")]
         public string SubjectName { get; set; } = string.Empty;
     }
 
@@ -41,10 +73,17 @@ namespace ProfRate.DTOs
     public class EvaluationDTO
     {
         public int EvaluationId { get; set; }
+        
+        [Range(1, 5, ErrorMessage = "التقييم يجب أن يكون بين 1 و 5")]
         public int Rating { get; set; }
+        
+        [Required]
         public int StudentId { get; set; }
+        [Required]
         public int QuestionId { get; set; }
+        [Required]
         public int LecturerId { get; set; }
+        [Required]
         public int SubjectId { get; set; }
     }
 
@@ -60,14 +99,18 @@ namespace ProfRate.DTOs
 
     public class StudentSubjectDTO
     {
+        [Required]
         public int StudentId { get; set; }
+        [Required]
         public int SubjectId { get; set; }
         public int? LecturerId { get; set; }
     }
 
     public class LecturerSubjectDTO
     {
+        [Required]
         public int LecturerId { get; set; }
+        [Required]
         public int SubjectId { get; set; }
     }
 }

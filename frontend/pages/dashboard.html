@@ -103,6 +103,18 @@
                 </div>
             </div>
 
+            <!-- Actions -->
+            <div class="card" style="margin-top: 20px;">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 class="card-title">إجراءات سريعة</h3>
+                </div>
+                <div style="padding: 20px;">
+                    <button onclick="resetEvaluations()" class="btn btn-danger">
+                        <i class="fas fa-redo-alt"></i> بدء دورة تقييم جديدة (أرشفة الحالي)
+                    </button>
+                </div>
+            </div>
+
             <!-- Recent Evaluations -->
             <div class="card">
                 <div class="card-header">
@@ -175,14 +187,25 @@
             tbody.innerHTML = recent.map((e, i) => `
                 <tr>
                     <td>${i + 1}</td>
-                    <td>${e.lecturer?.firstName || ''} ${e.lecturer?.lastName || ''}</td>
-                    <td>${e.subject?.subjectName || ''}</td>
+                    <td>${e.lecturerName || ''}</td>
+                    <td>${e.subjectName || ''}</td>
                     <td>${'★'.repeat(e.rating)}${'☆'.repeat(5 - e.rating)}</td>
                 </tr>
             `).join('');
         }
 
         // بدء التحميل
+        async function resetEvaluations() {
+            if (confirm('هل أنت متأكد من بدء دورة تقييم جديدة؟ سيتم أرشفة جميع التقييمات الحالية ولن تظهر في التقارير المباشرة.')) {
+                const result = await apiCall('/evaluations/Reset', 'POST');
+                if (result.success) {
+                    showAlert(result.data.message);
+                } else {
+                    showAlert('حدث خطأ أثناء إعادة الضبط', 'danger');
+                }
+            }
+        }
+
         loadStats();
     </script>
 </body>

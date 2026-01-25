@@ -9,11 +9,11 @@ namespace ProfRate.Controllers
     [ApiController]
     public class StudentSubjectController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly ProfRate.Services.StudentSubjectService _service;
 
-        public StudentSubjectController(AppDbContext context)
+        public StudentSubjectController(ProfRate.Services.StudentSubjectService service)
         {
-            _context = context;
+            _service = service;
         }
 
         // GET: api/studentsubjects/GetAll
@@ -21,11 +21,7 @@ namespace ProfRate.Controllers
         [Route("GetAll")]
         public async Task<IActionResult> GetAll()
         {
-            var list = await _context.StudentSubjects
-                .Include(ss => ss.Student)
-                .Include(ss => ss.Subject)
-                .Include(ss => ss.Lecturer)
-                .ToListAsync();
+            var list = await _service.GetAll();
             return Ok(list);
         }
 
@@ -34,11 +30,7 @@ namespace ProfRate.Controllers
         [Route("GetByStudent/{studentId}")]
         public async Task<IActionResult> GetByStudent(int studentId)
         {
-            var list = await _context.StudentSubjects
-                .Where(ss => ss.StudentId == studentId)
-                .Include(ss => ss.Subject)
-                .Include(ss => ss.Lecturer)
-                .ToListAsync();
+            var list = await _service.GetByStudent(studentId);
             return Ok(list);
         }
 
@@ -47,31 +39,12 @@ namespace ProfRate.Controllers
         [Route("Add")]
         public async Task<IActionResult> Add([FromBody] ProfRate.DTOs.StudentSubjectDTO model)
         {
-            // التحقق من عدم التكرار (نفس الطالب والمادة) - يمكن السماح بالتكرار إذا كان محاضر مختلف؟ 
-            // المستخدم يريد: "سجلت مع واحد... لما تيجي تقيم هتقيم الي انت بتدرس معاه فقط"
-            // إذن الطالب ممكن يسجل المادة الواحدة مرة واحدة فقط مع محاضر واحد؟ أو ممكن يسجل المادة مع محاضرين مختلفين؟
-            // الأغلب الطالب بيسجل المادة مرة واحدة في الترم. بس لو افترضنا انه ممكن يعيدها أو ياخدها مع محاضر تاني.
-            // للتسهيل وحسب طلب المستخدم: "الطالب يبقا له محاضر او محاضرين". 
-            // سأجعل التحقق: الطالب + المادة + المحاضر.
-            
-            var exists = await _context.StudentSubjects
-                .AnyAsync(ss => ss.StudentId == model.StudentId && ss.SubjectId == model.SubjectId && ss.LecturerId == model.LecturerId);
-            
-            if (exists)
+            var result = await _service.AddStudentSubject(model);
+            if (!result.Success)
             {
-                return BadRequest(new { message = "هذا الطالب مسجل بالفعل في هذه المادة مع هذا المحاضر" });
+                return BadRequest(new { message = result.Message });
             }
-
-            var entry = new StudentSubject
-            {
-                StudentId = model.StudentId,
-                SubjectId = model.SubjectId,
-                LecturerId = model.LecturerId
-            };
-
-            _context.StudentSubjects.Add(entry);
-            await _context.SaveChangesAsync();
-            return Ok(new { message = "تم ربط الطالب بالمادة بنجاح" });
+            return Ok(new { message = result.Message });
         }
 
         // DELETE: api/studentsubjects/Delete/5
@@ -79,14 +52,11 @@ namespace ProfRate.Controllers
         [Route("Delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var entry = await _context.StudentSubjects.FindAsync(id);
-            if (entry == null)
+            var success = await _service.DeleteStudentSubject(id);
+            if (!success)
             {
                 return NotFound(new { message = "غير موجود" });
             }
-
-            _context.StudentSubjects.Remove(entry);
-            await _context.SaveChangesAsync();
             return Ok(new { message = "تم الحذف بنجاح" });
         }
     }

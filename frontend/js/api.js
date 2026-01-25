@@ -1,6 +1,7 @@
 // ===== ProfRate API Service =====
 
 const API_URL = '/api';
+// const API_URL = 'http://localhost:5176/api'; // استخدم هذا الرابط لو شغال Front-end Live Server بعيد عن الباك إند
 
 // Helper function للـ API calls
 async function apiCall(endpoint, method = 'GET', data = null) {
