@@ -1,0 +1,6 @@
+@ProfRate_HostAddress = http://localhost:5176
+
+GET {{ProfRate_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

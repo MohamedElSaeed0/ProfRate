@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProfRate - ربط الطلاب بالمواد</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1><i class="fas fa-graduation-cap"></i> ProfRate</h1>
+                <p>نظام تقييم المحاضرين</p>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="dashboard.html" class="nav-link"><i class="fas fa-home"></i><span>لوحة
+                            التحكم</span></a></li>
+                <li class="nav-item"><a href="students.html" class="nav-link"><i
+                            class="fas fa-user-graduate"></i><span>إدارة الطلاب</span></a></li>
+                <li class="nav-item"><a href="lecturers.html" class="nav-link"><i
+                            class="fas fa-chalkboard-teacher"></i><span>إدارة المحاضرين</span></a></li>
+                <li class="nav-item"><a href="subjects.html" class="nav-link"><i class="fas fa-book"></i><span>إدارة
+                            المواد</span></a></li>
+                <li class="nav-item"><a href="questions.html" class="nav-link"><i
+                            class="fas fa-question-circle"></i><span>إدارة الأسئلة</span></a></li>
+                <li class="nav-item"><a href="assign-students.html" class="nav-link active"><i
+                            class="fas fa-link"></i><span>ربط الطلاب بالمواد</span></a></li>
+                <li class="nav-item"><a href="assign-lecturers.html" class="nav-link"><i
+                            class="fas fa-link"></i><span>ربط المحاضرين بالمواد</span></a></li>
+                <li class="nav-item"><a href="reports.html" class="nav-link"><i
+                            class="fas fa-chart-bar"></i><span>التقارير</span></a></li>
+                <li class="nav-item"><a href="#" class="nav-link" onclick="logout()"><i
+                            class="fas fa-sign-out-alt"></i><span>تسجيل الخروج</span></a></li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h2 class="page-title">ربط الطلاب بالمواد والمحاضرين</h2>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">تسجيل طالب في مادة مع محاضر محدد</h3>
+                </div>
+                <form id="assignForm">
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">الخظوة 1: اختر الطالب</label>
+                            <select class="form-control" id="studentId" required>
+                                <option value="">اختر الطالب</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">الخطوة 2: اختر المادة</label>
+                            <select class="form-control" id="subjectId" required>
+                                <option value="">اختر المادة</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">الخطوة 3: اختر المحاضر</label>
+                            <select class="form-control" id="lecturerId" required disabled>
+                                <option value="">اختر المادة أولاً</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> ربط الطالب بالمادة والمحاضر
+                    </button>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">الطلاب المسجلين في المواد</h3>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>الطالب</th>
+                                <th>المادة</th>
+                                <th>المحاضر</th>
+                                <th>إجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody id="assignmentsTable">
+                            <tr>
+                                <td colspan="5" style="text-align: center;">جاري التحميل...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        checkAuth();
+
+        async function loadData() {
+            const students = await StudentsAPI.getAll();
+            if (students.success) {
+                const select = document.getElementById('studentId');
+                students.data.forEach(s => {
+                    select.innerHTML += `<option value="${s.studentId}">${s.firstName} ${s.lastName}</option>`;
+                });
+            }
+
+            const subjects = await SubjectsAPI.getAll();
+            if (subjects.success) {
+                const select = document.getElementById('subjectId');
+                subjects.data.forEach(s => {
+                    select.innerHTML += `<option value="${s.subjectId}">${s.subjectName}</option>`;
+                });
+            }
+
+            loadAssignments();
+        }
+
+        // عند تغيير المادة، حمل المحاضرين المعينين لها
+        document.getElementById('subjectId').addEventListener('change', async function () {
+            const subjectId = this.value;
+            const lecturerSelect = document.getElementById('lecturerId');
+
+            if (!subjectId) {
+                lecturerSelect.innerHTML = '<option value="">اختر المادة أولاً</option>';
+                lecturerSelect.disabled = true;
+                return;
+            }
+
+            // جلب المحاضرين المعينين لهذه المادة
+            const lecturers = await apiCall(`/lecturersubjects/GetBySubject/${subjectId}`);
+
+            lecturerSelect.innerHTML = '<option value="">اختر المحاضر</option>';
+
+            if (lecturers.success && lecturers.data.length > 0) {
+                lecturers.data.forEach(ls => {
+                    lecturerSelect.innerHTML += `<option value="${ls.lecturerId}">${ls.lecturer?.firstName || ''} ${ls.lecturer?.lastName || ''}</option>`;
+                });
+                lecturerSelect.disabled = false;
+            } else {
+                lecturerSelect.innerHTML = '<option value="">لا يوجد محاضرين لهذه المادة بعد</option>';
+                lecturerSelect.disabled = true;
+                showAlert('تنبيه: يجب تعيين محاضرين لهذه المادة أولاً من صفحة "ربط المحاضرين بالمواد"', 'warning');
+            }
+        });
+
+        async function loadAssignments() {
+            const result = await apiCall('/studentsubjects/GetAll');
+            const tbody = document.getElementById('assignmentsTable');
+
+            if (!result.success || result.data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">لا توجد تعيينات</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = result.data.map((a, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>${a.student?.firstName || ''} ${a.student?.lastName || ''}</td>
+                    <td>${a.subject?.subjectName || ''}</td>
+                    <td>${a.lecturer ? (a.lecturer.firstName + ' ' + a.lecturer.lastName) : '<span style="color:red">غير محدد</span>'}</td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" onclick="deleteAssignment(${a.studentSubjectId})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function deleteAssignment(id) {
+            if (confirm('هل أنت متأكد من حذف هذا التعيين؟')) {
+                await apiCall(`/studentsubjects/Delete/${id}`, 'DELETE');
+                showAlert('تم حذف التعيين بنجاح');
+                loadAssignments();
+            }
+        }
+
+        document.getElementById('assignForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const lecturerId = document.getElementById('lecturerId').value;
+
+            if (!lecturerId) {
+                showAlert('الرجاء اختيار المحاضر', 'danger');
+                return;
+            }
+
+            const result = await apiCall('/studentsubjects/Add', 'POST', {
+                studentId: parseInt(document.getElementById('studentId').value),
+                subjectId: parseInt(document.getElementById('subjectId').value),
+                lecturerId: parseInt(lecturerId)
+            });
+
+            if (result.success) {
+                showAlert('تم ربط الطالب بالمادة والمحاضر بنجاح');
+                loadAssignments();
+            } else {
+                showAlert(result.data.message || 'حدث خطأ', 'danger');
+            }
+        });
+
+        loadData();
+    </script>
+</body>
+
+</html>

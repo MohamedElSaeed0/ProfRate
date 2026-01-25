@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProfRate - تسجيل الدخول</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h1><i class="fas fa-graduation-cap"></i> ProfRate</h1>
+                <p>نظام تقييم المحاضرين</p>
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label">اسم المستخدم</label>
+                    <input type="text" class="form-control" id="username" required placeholder="أدخل اسم المستخدم">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">كلمة المرور</label>
+                    <input type="password" class="form-control" id="password" required placeholder="أدخل كلمة المرور">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">نوع المستخدم</label>
+                    <select class="form-control" id="userType" required>
+                        <option value="">اختر نوع المستخدم</option>
+                        <option value="Admin">أدمن</option>
+                        <option value="Student">طالب</option>
+                        <option value="Lecturer">محاضر</option>
+                    </select>
+                </div>
+
+                <div id="errorMessage" class="alert alert-danger" style="display: none;"></div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-sign-in-alt"></i>
+                    تسجيل الدخول
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const userType = document.getElementById('userType').value;
+            const errorDiv = document.getElementById('errorMessage');
+
+            // إخفاء رسالة الخطأ
+            errorDiv.style.display = 'none';
+
+            // إرسال طلب تسجيل الدخول
+            const result = await AuthAPI.login(username, password, userType);
+
+            if (result.success && result.data.success) {
+                // حفظ الـ Token
+                localStorage.setItem('token', result.data.token);
+                localStorage.setItem('userType', result.data.userType);
+                localStorage.setItem('userId', result.data.userId);
+
+                // التوجيه للصفحة المناسبة
+                if (userType === 'Admin') {
+                    window.location.href = 'pages/dashboard.html';
+                } else if (userType === 'Student') {
+                    window.location.href = 'pages/student-dashboard.html';
+                } else {
+                    window.location.href = 'pages/lecturer-dashboard.html';
+                }
+            } else {
+                // عرض رسالة الخطأ
+                errorDiv.textContent = result.data.message || 'خطأ في تسجيل الدخول';
+                errorDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+
+</html>

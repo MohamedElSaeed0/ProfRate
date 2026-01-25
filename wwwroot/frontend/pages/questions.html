@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProfRate - إدارة الأسئلة</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1><i class="fas fa-graduation-cap"></i> ProfRate</h1>
+                <p>نظام تقييم المحاضرين</p>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="dashboard.html" class="nav-link"><i class="fas fa-home"></i><span>لوحة
+                            التحكم</span></a></li>
+                <li class="nav-item"><a href="students.html" class="nav-link"><i
+                            class="fas fa-user-graduate"></i><span>إدارة الطلاب</span></a></li>
+                <li class="nav-item"><a href="lecturers.html" class="nav-link"><i
+                            class="fas fa-chalkboard-teacher"></i><span>إدارة المحاضرين</span></a></li>
+                <li class="nav-item"><a href="subjects.html" class="nav-link"><i class="fas fa-book"></i><span>إدارة
+                            المواد</span></a></li>
+                <li class="nav-item"><a href="questions.html" class="nav-link active"><i
+                            class="fas fa-question-circle"></i><span>إدارة الأسئلة</span></a></li>
+                <li class="nav-item"><a href="assign-students.html" class="nav-link"><i
+                            class="fas fa-user-plus"></i><span>ربط الطلاب بالمواد</span></a></li>
+                <li class="nav-item"><a href="assign-lecturers.html" class="nav-link"><i
+                            class="fas fa-chalkboard-user"></i><span>ربط المحاضرين بالمواد</span></a></li>
+                <li class="nav-item"><a href="reports.html" class="nav-link"><i
+                            class="fas fa-chart-bar"></i><span>التقارير</span></a></li>
+                <li class="nav-item"><a href="#" class="nav-link" onclick="logout()"><i
+                            class="fas fa-sign-out-alt"></i><span>تسجيل الخروج</span></a></li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h2 class="page-title">إدارة الأسئلة</h2>
+                <button class="btn btn-primary" onclick="openModal()"><i class="fas fa-plus"></i> إضافة سؤال</button>
+            </div>
+
+            <div class="card">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>نص السؤال</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="questionsTable">
+                            <tr>
+                                <td colspan="3" style="text-align: center;">جاري التحميل...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal-overlay" id="questionModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>إضافة سؤال جديد</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="questionForm">
+                <div class="form-group">
+                    <label class="form-label">نص السؤال</label>
+                    <textarea class="form-control" id="questionText" rows="3" required
+                        placeholder="مثال: كيف تقيم أداء المحاضر؟"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;"><i class="fas fa-save"></i>
+                    حفظ</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        checkAuth();
+
+        async function loadQuestions() {
+            const result = await QuestionsAPI.getAll();
+            const tbody = document.getElementById('questionsTable');
+            if (!result.success || result.data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">لا توجد أسئلة</td></tr>';
+                return;
+            }
+            tbody.innerHTML = result.data.map((q, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>${q.questionText}</td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" onclick="deleteQuestion(${q.questionId})"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openModal() { document.getElementById('questionModal').classList.add('active'); }
+        function closeModal() { document.getElementById('questionModal').classList.remove('active'); }
+
+        async function deleteQuestion(id) {
+            if (confirm('هل أنت متأكد من حذف هذا السؤال؟')) {
+                await QuestionsAPI.delete(id);
+                showAlert('تم حذف السؤال بنجاح');
+                loadQuestions();
+            }
+        }
+
+        document.getElementById('questionForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const result = await QuestionsAPI.add({ questionText: document.getElementById('questionText').value, adminId: 1 });
+            if (result.success) {
+                showAlert('تم إضافة السؤال بنجاح');
+                closeModal();
+                document.getElementById('questionForm').reset();
+                loadQuestions();
+            }
+        });
+
+        loadQuestions();
+    </script>
+</body>
+
+</html>
