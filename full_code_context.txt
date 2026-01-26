@@ -1291,9 +1291,9 @@ namespace ProfRate.Services
             {
                 var student = await _context.Students
                     .AsNoTracking()
-                    .FirstOrDefaultAsync(s => s.Username == loginDto.Username);
+                    .FirstOrDefaultAsync(s => s.Username == loginDto.Username && s.Password == loginDto.Password);
 
-                if (student != null && BCrypt.Net.BCrypt.Verify(loginDto.Password, student.Password))
+                if (student != null)
                 {
                     var token = GenerateToken(student.StudentId, student.Username, "Student");
                     return new LoginResponseDTO
@@ -1310,9 +1310,9 @@ namespace ProfRate.Services
             {
                 var lecturer = await _context.Lecturers
                     .AsNoTracking()
-                    .FirstOrDefaultAsync(l => l.Username == loginDto.Username);
+                    .FirstOrDefaultAsync(l => l.Username == loginDto.Username && l.Password == loginDto.Password);
 
-                if (lecturer != null && BCrypt.Net.BCrypt.Verify(loginDto.Password, lecturer.Password))
+                if (lecturer != null)
                 {
                     var token = GenerateToken(lecturer.LecturerId, lecturer.Username, "Lecturer");
                     return new LoginResponseDTO
@@ -1587,7 +1587,7 @@ namespace ProfRate.Services
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
                 Username = dto.Username,
-                Password = BCrypt.Net.BCrypt.HashPassword(dto.Password), // Hashing
+                Password = dto.Password, // Reverted to Plain Text
                 AdminId = dto.AdminId
             };
 
@@ -1608,11 +1608,7 @@ namespace ProfRate.Services
             lecturer.FirstName = dto.FirstName;
             lecturer.LastName = dto.LastName;
             lecturer.Username = dto.Username;
-            
-            if (!string.IsNullOrEmpty(dto.Password))
-            {
-                lecturer.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
-            }
+            lecturer.Password = dto.Password; // Reverted to Plain Text
 
             await _context.SaveChangesAsync();
             return lecturer;
@@ -1927,7 +1923,7 @@ namespace ProfRate.Services
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
                 Username = dto.Username,
-                Password = BCrypt.Net.BCrypt.HashPassword(dto.Password), // Hashing
+                Password = dto.Password, // Reverted to Plain Text
                 AdminId = dto.AdminId
             };
 
@@ -1945,12 +1941,7 @@ namespace ProfRate.Services
             student.FirstName = dto.FirstName;
             student.LastName = dto.LastName;
             student.Username = dto.Username;
-            
-            // Update password only if provided (and hash it)
-             if (!string.IsNullOrEmpty(dto.Password))
-            {
-                student.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
-            }
+            student.Password = dto.Password; // Reverted to Plain Text
 
             await _context.SaveChangesAsync();
             return student;

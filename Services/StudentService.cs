@@ -73,7 +73,7 @@ namespace ProfRate.Services
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
                 Username = dto.Username,
-                Password = BCrypt.Net.BCrypt.HashPassword(dto.Password), // Hashing
+                Password = dto.Password, // Reverted to Plain Text
                 AdminId = dto.AdminId
             };
 
@@ -91,12 +91,7 @@ namespace ProfRate.Services
             student.FirstName = dto.FirstName;
             student.LastName = dto.LastName;
             student.Username = dto.Username;
-            
-            // Update password only if provided (and hash it)
-             if (!string.IsNullOrEmpty(dto.Password))
-            {
-                student.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
-            }
+            student.Password = dto.Password; // Reverted to Plain Text
 
             await _context.SaveChangesAsync();
             return student;
