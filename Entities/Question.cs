@@ -1,9 +1,13 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace ProfRate.Entities
 {
     // السؤال - أسئلة التقييم
     public class Question
     {
         public int QuestionId { get; set; }
+        
+        [MaxLength(200)]
         public string QuestionText { get; set; } = string.Empty;
 
         // Foreign Key

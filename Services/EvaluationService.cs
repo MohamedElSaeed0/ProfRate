@@ -74,7 +74,7 @@ namespace ProfRate.Services
         // الحصول على تقييمات محاضر معين (مجمعة وبدون أسماء طلاب)
         public async Task<List<EvaluationResponseDTO>> GetEvaluationsByLecturer(int lecturerId)
         {
-            return await _context.Evaluations
+            return await _context.Evaluations.AsNoTracking()
                 .Include(e => e.Student)
                 .Include(e => e.Lecturer)
                 .Include(e => e.Subject)
@@ -101,7 +101,7 @@ namespace ProfRate.Services
         // الحصول على تقرير التقييمات لكل محاضر
         public async Task<List<EvaluationReportDTO>> GetEvaluationReport()
         {
-            var report = await _context.Evaluations
+            var report = await _context.Evaluations.AsNoTracking()
                 .Where(e => !e.IsArchived) // فقط التقييمات النشطة
                 .GroupBy(e => new { e.LecturerId, e.Lecturer.FirstName, e.Lecturer.LastName, e.SubjectId, e.Subject.SubjectName })
                 .Select(g => new EvaluationReportDTO
@@ -120,7 +120,7 @@ namespace ProfRate.Services
         // الحصول على كل التقييمات (مجمعة لكل طالب/دكتور/مادة)
         public async Task<List<EvaluationResponseDTO>> GetAllEvaluations()
         {
-            return await _context.Evaluations
+            return await _context.Evaluations.AsNoTracking()
                 .Include(e => e.Student)
                 .Include(e => e.Lecturer)
                 .Include(e => e.Subject)

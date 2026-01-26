@@ -1,12 +1,22 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace ProfRate.Entities
 {
     // الطالب - اللي بيعمل التقييم
     public class Student
     {
         public int StudentId { get; set; }
+        
+        [MaxLength(50)]
         public string FirstName { get; set; } = string.Empty;
+        
+        [MaxLength(50)]
         public string LastName { get; set; } = string.Empty;
+        
+        [MaxLength(50)]
         public string Username { get; set; } = string.Empty;
+        
+        [MaxLength(100)]
         public string Password { get; set; } = string.Empty;
 
         // Foreign Key

@@ -1,9 +1,13 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace ProfRate.Entities
 {
     // المادة الدراسية
     public class Subject
     {
         public int SubjectId { get; set; }
+        
+        [MaxLength(50)]
         public string SubjectName { get; set; } = string.Empty;
 
         // Navigation Properties

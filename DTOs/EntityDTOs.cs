@@ -75,7 +75,7 @@ namespace ProfRate.DTOs
         public int EvaluationId { get; set; }
         
         [Range(1, 5, ErrorMessage = "التقييم يجب أن يكون بين 1 و 5")]
-        public int Rating { get; set; }
+        public byte Rating { get; set; }
         
         [Required]
         public int StudentId { get; set; }

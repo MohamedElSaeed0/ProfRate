@@ -26,6 +26,16 @@ namespace ProfRate.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            // Ensure Username is Unique for Students
+            modelBuilder.Entity<Student>()
+                .HasIndex(u => u.Username)
+                .IsUnique();
+
+            // Ensure Username is Unique for Lecturers
+            modelBuilder.Entity<Lecturer>()
+                .HasIndex(u => u.Username)
+                .IsUnique();
+
             // Admin -> Students (One-to-Many)
             modelBuilder.Entity<Student>()
                 .HasOne(s => s.Admin)

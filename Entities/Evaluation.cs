@@ -4,7 +4,7 @@ namespace ProfRate.Entities
     public class Evaluation
     {
         public int EvaluationId { get; set; }
-        public int Rating { get; set; }  // التقييم من 1 لـ 5 مثلاً
+        public byte Rating { get; set; }  // التقييم من 1 لـ 5 مثلاً
         public bool IsArchived { get; set; } = false;
 
         // Foreign Keys

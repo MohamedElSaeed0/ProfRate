@@ -18,7 +18,7 @@ namespace ProfRate.Services
         // الحصول على كل الطلاب
         public async Task<List<Student>> GetAllStudents()
         {
-            return await _context.Students.ToListAsync();
+            return await _context.Students.AsNoTracking().ToListAsync();
         }
 
         // الحصول على طالب بالـ ID
@@ -47,7 +47,7 @@ namespace ProfRate.Services
         // تعديل طالب
         public async Task<Student?> UpdateStudent(int id, StudentDTO dto)
         {
-            var student = await _context.Students.FindAsync(id);
+            var student = await _context.Students.FirstOrDefaultAsync(s => s.StudentId == id);
             if (student == null) return null;
 
             student.FirstName = dto.FirstName;
