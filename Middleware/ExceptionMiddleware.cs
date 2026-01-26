@@ -32,14 +32,14 @@ namespace ProfRate.Middleware
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
+            var isDevelopment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
+
             var response = new
             {
                 StatusCode = context.Response.StatusCode,
-                Message = "Internal Server Error from Global Middleware",
-                Detailed = exception.Message 
+                Message = "حدث خطأ، يرجى المحاولة لاحقاً",
+                Detailed = isDevelopment ? exception.Message : null // Show details only in Dev
             };
-            
-            // In Production, don't show 'Detailed' exception message
             
             return context.Response.WriteAsync(JsonSerializer.Serialize(response));
         }

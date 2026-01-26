@@ -50,6 +50,7 @@ namespace ProfRate.Controllers
         // إضافة تقييم جديد
         [HttpPost]
         [Route("Add")]
+        [Authorize(Roles = "Student")] // الطلاب فقط هم من يقيمون
         public async Task<IActionResult> AddEvaluation([FromBody] EvaluationDTO dto)
         {
             try
@@ -67,7 +68,7 @@ namespace ProfRate.Controllers
         // إعادة ضبط التقييمات (للأدمن فقط)
         [HttpPost]
         [Route("Reset")]
-        // [Authorize(Roles = "Admin")] // يجب تفعيل هذا في الإنتاج
+        [Authorize(Roles = "Admin")] // تفعيل الصلاحية للأدمن فقط
         public async Task<IActionResult> ResetEvaluations()
         {
             var result = await _evaluationService.ResetEvaluations();

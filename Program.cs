@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using ProfRate.Data;
@@ -52,13 +53,45 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 // 6. إضافة الـ CORS (للسماح للـ Frontend بالتواصل)
+// 6. إضافة الـ CORS (للسماح للـ Frontend بالتواصل)
+var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? new[] { "*" };
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("AllowSpecificOrigins", policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        if (allowedOrigins.Contains("*"))
+        {
+             policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+        }
+        else 
+        {
+             policy.WithOrigins(allowedOrigins).AllowAnyMethod().AllowAnyHeader().AllowCredentials();
+        }
+    });
+});
+
+// 7. إضافة Memory Cache (للأداء)
+builder.Services.AddMemoryCache();
+
+// 8. إضافة Rate Limiting (للحماية من الهجمات)
+builder.Services.AddRateLimiter(options =>
+{
+    // General Policy
+    options.AddFixedWindowLimiter("general", opt =>
+    {
+        opt.PermitLimit = 30;
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
+        opt.QueueLimit = 2;
+    });
+
+    // Strict Login Policy
+    options.AddFixedWindowLimiter("login", opt =>
+    {
+        opt.PermitLimit = 5;
+        opt.Window = TimeSpan.FromMinutes(5);
+        opt.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
+        opt.QueueLimit = 0;
     });
 });
 
@@ -84,7 +117,10 @@ app.UseStaticFiles();
 app.UseHttpsRedirection();
 
 // CORS
-app.UseCors("AllowAll");
+app.UseCors("AllowSpecificOrigins");
+
+// Rate Limiter
+app.UseRateLimiter();
 
 // Authentication & Authorization
 app.UseAuthentication();

@@ -29,7 +29,18 @@ async function apiCall(endpoint, method = 'GET', data = null) {
         return { success: response.ok, data: result };
     } catch (error) {
         console.error('API Error:', error);
-        return { success: false, data: { message: 'خطأ في الاتصال بالسيرفر' } };
+
+        if (error.message === 'Failed to fetch') {
+            return { success: false, data: { message: 'لا يمكن الاتصال بالسيرفر، تأكد من تشغيل الباك إند' } };
+        }
+
+        if (error.status === 401) {
+            localStorage.clear();
+            window.location.href = '/frontend/login.html';
+            return { success: false, data: { message: 'انتهت الجلسة، يرجى تسجيل الدخول مرة أخرى' } };
+        }
+
+        return { success: false, data: { message: error.message || 'حدث خطأ غير متوقع' } };
     }
 }
 
@@ -42,7 +53,7 @@ const AuthAPI = {
 
 // ===== Students API =====
 const StudentsAPI = {
-    getAll: () => apiCall('/students/GetAll'),
+    getAll: (page = 1, pageSize = 20) => apiCall(`/students/GetAll?page=${page}&pageSize=${pageSize}`),
     search: (query) => apiCall(`/students/Search?query=${query}`),
     getById: (id) => apiCall(`/students/GetById/${id}`),
     add: (data) => apiCall('/students/Add', 'POST', data),

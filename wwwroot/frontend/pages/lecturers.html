@@ -186,15 +186,34 @@
             }
         }
 
+        // التحقق من صحة البيانات
+        function validateLecturerData(data) {
+            const errors = [];
+            if (data.firstName.length < 2) errors.push('الاسم الأول يجب أن يكون حرفين على الأقل');
+            if (data.lastName.length < 2) errors.push('الاسم الأخير يجب أن يكون حرفين على الأقل');
+            if (data.username.length < 3) errors.push('اسم المستخدم يجب أن يكون 3 أحرف على الأقل');
+            if (!/^[a-zA-Z0-9_]+$/.test(data.username)) errors.push('اسم المستخدم يجب أن يحتوي على أحرف إنجليزية وأرقام فقط');
+            if (data.password.length < 4) errors.push('كلمة المرور يجب أن تكون 4 أحرف على الأقل');
+            return errors;
+        }
+
         document.getElementById('lecturerForm').addEventListener('submit', async function (e) {
             e.preventDefault();
             const data = {
-                firstName: document.getElementById('firstName').value,
-                lastName: document.getElementById('lastName').value,
-                username: document.getElementById('username').value,
+                firstName: document.getElementById('firstName').value.trim(),
+                lastName: document.getElementById('lastName').value.trim(),
+                username: document.getElementById('username').value.trim(),
                 password: document.getElementById('password').value,
                 adminId: 1
             };
+
+            // Validation Check
+            const errors = validateLecturerData(data);
+            if (errors.length > 0) {
+                showAlert(errors.join('\n'), 'danger');
+                return;
+            }
+
             const lecturerId = document.getElementById('lecturerId').value;
             const result = lecturerId ? await LecturersAPI.update(lecturerId, data) : await LecturersAPI.add(data);
             if (result.success) {
@@ -202,9 +221,8 @@
                 closeModal();
                 loadLecturers();
             } else {
-                // Show backend error (Detailed message from ExceptionMiddleware)
-                const errorMsg = result.data?.Detailed || result.data?.detailed || 'حدث خطأ في النظام';
-                showAlert(errorMsg, 'danger');
+                // Show backend error
+                showAlert(result.data.message || 'حدث خطأ', 'danger');
             }
         });
 

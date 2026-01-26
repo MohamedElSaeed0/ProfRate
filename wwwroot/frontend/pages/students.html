@@ -116,6 +116,10 @@
                         </tbody>
                     </table>
                 </div>
+                <!-- Pagination Controls -->
+                <div id="pagination"
+                    style="padding: 15px; display: flex; justify-content: center; align-items: center; border-top: 1px solid #eee;">
+                </div>
             </div>
         </main>
     </div>
@@ -170,19 +174,27 @@
             searchTimeout = setTimeout(() => loadStudents(query), 300);
         }
 
-        // تحميل الطلاب
-        async function loadStudents(query = '') {
-            const result = query ? await StudentsAPI.search(query) : await StudentsAPI.getAll();
-            const tbody = document.getElementById('studentsTable');
+        let currentPage = 1;
+        const pageSize = 20;
 
-            if (!result.success || result.data.length === 0) {
+        // تحميل الطلاب
+        async function loadStudents(query = '', page = 1) {
+            currentPage = page;
+            const result = query ? await StudentsAPI.search(query) : await StudentsAPI.getAll(page, pageSize);
+            const tbody = document.getElementById('studentsTable');
+            const paginationDiv = document.getElementById('pagination');
+
+            if (!result.success || (query ? result.data.length === 0 : result.data.items.length === 0)) {
                 tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">لا يوجد طلاب</td></tr>';
+                paginationDiv.innerHTML = '';
                 return;
             }
 
-            tbody.innerHTML = result.data.map((s, i) => `
+            const data = query ? result.data : result.data.items;
+
+            tbody.innerHTML = data.map((s, i) => `
                 <tr>
-                    <td>${i + 1}</td>
+                    <td>${(currentPage - 1) * pageSize + i + 1}</td>
                     <td>${s.firstName}</td>
                     <td>${s.lastName}</td>
                     <td>${s.username}</td>
@@ -196,6 +208,18 @@
                     </td>
                 </tr>
             `).join('');
+
+            // Pagination Controls (Only show if not searching)
+            if (!query) {
+                const info = result.data;
+                paginationDiv.innerHTML = `
+                    <button class="btn btn-secondary btn-sm" ${!info.hasPrevious ? 'disabled' : ''} onclick="loadStudents('', ${currentPage - 1})">السابق</button>
+                    <span style="margin: 0 10px;">صفحة ${info.currentPage} من ${info.totalPages} (إجمالي: ${info.totalCount})</span>
+                    <button class="btn btn-secondary btn-sm" ${!info.hasNext ? 'disabled' : ''} onclick="loadStudents('', ${currentPage + 1})">التالي</button>
+                `;
+            } else {
+                paginationDiv.innerHTML = '';
+            }
         }
 
         // فتح الـ Modal
@@ -236,17 +260,35 @@
             }
         }
 
+        // التحقق من صحة البيانات
+        function validateStudentData(data) {
+            const errors = [];
+            if (data.firstName.length < 2) errors.push('الاسم الأول يجب أن يكون حرفين على الأقل');
+            if (data.lastName.length < 2) errors.push('الاسم الأخير يجب أن يكون حرفين على الأقل');
+            if (data.username.length < 3) errors.push('اسم المستخدم يجب أن يكون 3 أحرف على الأقل');
+            if (!/^[a-zA-Z0-9_]+$/.test(data.username)) errors.push('اسم المستخدم يجب أن يحتوي على أحرف إنجليزية وأرقام فقط');
+            if (data.password.length < 4) errors.push('كلمة المرور يجب أن تكون 4 أحرف على الأقل');
+            return errors;
+        }
+
         // حفظ الطالب
         document.getElementById('studentForm').addEventListener('submit', async function (e) {
             e.preventDefault();
 
             const data = {
-                firstName: document.getElementById('firstName').value,
-                lastName: document.getElementById('lastName').value,
-                username: document.getElementById('username').value,
+                firstName: document.getElementById('firstName').value.trim(),
+                lastName: document.getElementById('lastName').value.trim(),
+                username: document.getElementById('username').value.trim(),
                 password: document.getElementById('password').value,
                 adminId: 1
             };
+
+            // Validation Check
+            const errors = validateStudentData(data);
+            if (errors.length > 0) {
+                showAlert(errors.join('\n'), 'danger');
+                return;
+            }
 
             const studentId = document.getElementById('studentId').value;
             let result;
@@ -262,7 +304,7 @@
                 closeModal();
                 loadStudents();
             } else {
-                showAlert('حدث خطأ', 'danger');
+                showAlert(result.data.message || 'حدث خطأ', 'danger');
             }
         });
 

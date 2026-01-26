@@ -19,6 +19,7 @@ namespace ProfRate.Controllers
         // تسجيل الدخول
         [HttpPost]
         [Route("login")]
+        [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("login")]
         public async Task<IActionResult> Login([FromBody] LoginDTO loginDto)
         {
             var result = await _authService.Login(loginDto);

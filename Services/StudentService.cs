@@ -16,22 +16,46 @@ namespace ProfRate.Services
         }
 
         // الحصول على كل الطلاب
-        public async Task<List<Student>> GetAllStudents()
+        // الحصول على كل الطلاب (مع Pagination)
+        public async Task<PagedResult<Student>> GetAllStudents(int page = 1, int pageSize = 20)
         {
-            return await _context.Students.AsNoTracking().OrderBy(s => s.FirstName).ToListAsync();
+            var totalStudents = await _context.Students.CountAsync();
+
+            var students = await _context.Students
+                .AsNoTracking()
+                .OrderBy(s => s.FirstName)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PagedResult<Student>
+            {
+                Items = students,
+                TotalCount = totalStudents,
+                CurrentPage = page,
+                PageSize = pageSize,
+                TotalPages = (int)Math.Ceiling(totalStudents / (double)pageSize)
+            };
         }
 
+        // البحث عن طلاب (بالاسم أو اسم المستخدم)
         // البحث عن طلاب (بالاسم أو اسم المستخدم)
         public async Task<List<Student>> Search(string query)
         {
             if (string.IsNullOrWhiteSpace(query))
                 return new List<Student>();
 
+            // Sanitize Input
+            query = query.Trim();
+            if (query.Length > 100) query = query.Substring(0, 100);
+            query = System.Text.RegularExpressions.Regex.Replace(query, @"[^\w\s\u0600-\u06FF]", "");
+
             return await _context.Students
                 .AsNoTracking()
                 .Where(s => s.Username.Contains(query) || 
                             (s.FirstName + " " + s.LastName).Contains(query))
                 .OrderBy(s => s.FirstName)
+                .Take(100)
                 .ToListAsync();
         }
 
@@ -49,7 +73,7 @@ namespace ProfRate.Services
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
                 Username = dto.Username,
-                Password = dto.Password,
+                Password = BCrypt.Net.BCrypt.HashPassword(dto.Password), // Hashing
                 AdminId = dto.AdminId
             };
 
@@ -67,7 +91,12 @@ namespace ProfRate.Services
             student.FirstName = dto.FirstName;
             student.LastName = dto.LastName;
             student.Username = dto.Username;
-            student.Password = dto.Password;
+            
+            // Update password only if provided (and hash it)
+             if (!string.IsNullOrEmpty(dto.Password))
+            {
+                student.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+            }
 
             await _context.SaveChangesAsync();
             return student;

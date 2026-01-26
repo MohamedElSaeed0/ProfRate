@@ -48,9 +48,9 @@ namespace ProfRate.Services
             {
                 var student = await _context.Students
                     .AsNoTracking()
-                    .FirstOrDefaultAsync(s => s.Username == loginDto.Username && s.Password == loginDto.Password);
+                    .FirstOrDefaultAsync(s => s.Username == loginDto.Username);
 
-                if (student != null)
+                if (student != null && BCrypt.Net.BCrypt.Verify(loginDto.Password, student.Password))
                 {
                     var token = GenerateToken(student.StudentId, student.Username, "Student");
                     return new LoginResponseDTO
@@ -67,9 +67,9 @@ namespace ProfRate.Services
             {
                 var lecturer = await _context.Lecturers
                     .AsNoTracking()
-                    .FirstOrDefaultAsync(l => l.Username == loginDto.Username && l.Password == loginDto.Password);
+                    .FirstOrDefaultAsync(l => l.Username == loginDto.Username);
 
-                if (lecturer != null)
+                if (lecturer != null && BCrypt.Net.BCrypt.Verify(loginDto.Password, lecturer.Password))
                 {
                     var token = GenerateToken(lecturer.LecturerId, lecturer.Username, "Lecturer");
                     return new LoginResponseDTO

@@ -18,12 +18,17 @@ namespace ProfRate.Controllers
 
         // GET: api/students
         // الحصول على كل الطلاب
+        // GET: api/students
+        // الحصول على كل الطلاب
         [HttpGet]
         [Route("GetAll")]
-        public async Task<IActionResult> GetAllStudents()
+        public async Task<IActionResult> GetAllStudents([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
-            var students = await _studentService.GetAllStudents();
-            return Ok(students);
+            if (page < 1) page = 1;
+            if (pageSize < 1 || pageSize > 100) pageSize = 20;
+
+            var result = await _studentService.GetAllStudents(page, pageSize);
+            return Ok(result);
         }
 
         // GET: api/students/Search?query=...

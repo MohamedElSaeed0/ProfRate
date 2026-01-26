@@ -22,16 +22,23 @@ namespace ProfRate.Services
         }
 
         // البحث عن محاضرين (بالاسم أو اسم المستخدم)
+        // البحث عن محاضرين (بالاسم أو اسم المستخدم)
         public async Task<List<Lecturer>> Search(string query)
         {
             if (string.IsNullOrWhiteSpace(query))
                 return new List<Lecturer>();
+            
+            // Sanitize Input
+            query = query.Trim();
+            if (query.Length > 100) query = query.Substring(0, 100);
+            query = System.Text.RegularExpressions.Regex.Replace(query, @"[^\w\s\u0600-\u06FF]", "");
 
             return await _context.Lecturers
                 .AsNoTracking()
                 .Where(l => l.Username.Contains(query) || 
                             (l.FirstName + " " + l.LastName).Contains(query))
                 .OrderBy(l => l.FirstName)
+                .Take(100)
                 .ToListAsync();
         }
 
@@ -52,7 +59,7 @@ namespace ProfRate.Services
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
                 Username = dto.Username,
-                Password = dto.Password,
+                Password = BCrypt.Net.BCrypt.HashPassword(dto.Password), // Hashing
                 AdminId = dto.AdminId
             };
 
@@ -73,7 +80,11 @@ namespace ProfRate.Services
             lecturer.FirstName = dto.FirstName;
             lecturer.LastName = dto.LastName;
             lecturer.Username = dto.Username;
-            lecturer.Password = dto.Password;
+            
+            if (!string.IsNullOrEmpty(dto.Password))
+            {
+                lecturer.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+            }
 
             await _context.SaveChangesAsync();
             return lecturer;
