@@ -18,7 +18,21 @@ namespace ProfRate.Services
         // الحصول على كل الطلاب
         public async Task<List<Student>> GetAllStudents()
         {
-            return await _context.Students.AsNoTracking().ToListAsync();
+            return await _context.Students.AsNoTracking().OrderBy(s => s.FirstName).ToListAsync();
+        }
+
+        // البحث عن طلاب (بالاسم أو اسم المستخدم)
+        public async Task<List<Student>> Search(string query)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+                return new List<Student>();
+
+            return await _context.Students
+                .AsNoTracking()
+                .Where(s => s.Username.Contains(query) || 
+                            (s.FirstName + " " + s.LastName).Contains(query))
+                .OrderBy(s => s.FirstName)
+                .ToListAsync();
         }
 
         // الحصول على طالب بالـ ID
@@ -60,10 +74,22 @@ namespace ProfRate.Services
         }
 
         // حذف طالب
+        // حذف طالب (مع حذف كل بياناته المرتبطة)
         public async Task<bool> DeleteStudent(int id)
         {
-            var student = await _context.Students.FindAsync(id);
+            var student = await _context.Students
+                .Include(s => s.Evaluations)
+                .Include(s => s.StudentSubjects)
+                .FirstOrDefaultAsync(s => s.StudentId == id);
+
             if (student == null) return false;
+
+            // Manual Cascade Delete
+            if (student.Evaluations.Any())
+                _context.Evaluations.RemoveRange(student.Evaluations);
+
+            if (student.StudentSubjects.Any())
+                _context.StudentSubjects.RemoveRange(student.StudentSubjects);
 
             _context.Students.Remove(student);
             await _context.SaveChangesAsync();

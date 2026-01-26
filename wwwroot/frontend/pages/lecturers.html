@@ -42,12 +42,25 @@
 
         <!-- Main Content -->
         <main class="main-content">
+
+
             <div class="page-header">
                 <h2 class="page-title">إدارة المحاضرين</h2>
                 <button class="btn btn-primary" onclick="openModal()">
                     <i class="fas fa-plus"></i>
                     إضافة محاضر
                 </button>
+            </div>
+
+
+
+
+            <!-- Search Bar -->
+            <div class="card" style="margin-bottom: 20px;">
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="searchInput" class="form-control"
+                        placeholder="ابحث باسم المحاضر أو اسم المستخدم..." onkeyup="searchLecturers()">
+                </div>
             </div>
 
             <div class="card">
@@ -105,12 +118,19 @@
         </div>
     </div>
 
-    <script src="../js/api.js"></script>
+    <script src="../js/api.js?v=2"></script>
     <script>
         checkAuth();
 
-        async function loadLecturers() {
-            const result = await LecturersAPI.getAll();
+        let searchTimeout;
+        function searchLecturers() {
+            const query = document.getElementById('searchInput').value;
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => loadLecturers(query), 300);
+        }
+
+        async function loadLecturers(query = '') {
+            const result = query ? await LecturersAPI.search(query) : await LecturersAPI.getAll();
             const tbody = document.getElementById('lecturersTable');
 
             if (!result.success || result.data.length === 0) {
@@ -181,6 +201,10 @@
                 showAlert(lecturerId ? 'تم تعديل المحاضر بنجاح' : 'تم إضافة المحاضر بنجاح');
                 closeModal();
                 loadLecturers();
+            } else {
+                // Show backend error (Detailed message from ExceptionMiddleware)
+                const errorMsg = result.data?.Detailed || result.data?.detailed || 'حدث خطأ في النظام';
+                showAlert(errorMsg, 'danger');
             }
         });
 

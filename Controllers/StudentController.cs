@@ -26,6 +26,15 @@ namespace ProfRate.Controllers
             return Ok(students);
         }
 
+        // GET: api/students/Search?query=...
+        [HttpGet]
+        [Route("Search")]
+        public async Task<IActionResult> Search([FromQuery] string query)
+        {
+            var students = await _studentService.Search(query);
+            return Ok(students);
+        }
+
         // GET: api/students/GetById/5
         // الحصول على طالب بالـ ID
         [HttpGet]

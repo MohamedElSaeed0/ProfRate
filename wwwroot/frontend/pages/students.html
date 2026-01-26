@@ -78,12 +78,22 @@
 
         <!-- Main Content -->
         <main class="main-content">
+
+
             <div class="page-header">
                 <h2 class="page-title">إدارة الطلاب</h2>
                 <button class="btn btn-primary" onclick="openModal()">
                     <i class="fas fa-plus"></i>
                     إضافة طالب
                 </button>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="card" style="margin-bottom: 20px;">
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="searchInput" class="form-control"
+                        placeholder="ابحث باسم الطالب أو اسم المستخدم..." onkeyup="searchStudents()">
+                </div>
             </div>
 
             <!-- Students Table -->
@@ -149,13 +159,20 @@
         </div>
     </div>
 
-    <script src="../js/api.js"></script>
+    <script src="../js/api.js?v=2"></script>
     <script>
         checkAuth();
 
+        let searchTimeout;
+        function searchStudents() {
+            const query = document.getElementById('searchInput').value;
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => loadStudents(query), 300);
+        }
+
         // تحميل الطلاب
-        async function loadStudents() {
-            const result = await StudentsAPI.getAll();
+        async function loadStudents(query = '') {
+            const result = query ? await StudentsAPI.search(query) : await StudentsAPI.getAll();
             const tbody = document.getElementById('studentsTable');
 
             if (!result.success || result.data.length === 0) {

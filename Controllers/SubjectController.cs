@@ -50,19 +50,7 @@ namespace ProfRate.Controllers
             return Ok(new { message = "تمت إضافة المادة بنجاح", subject });
         }
 
-        // PUT: api/subjects/Update/5
-        // تعديل مادة
-        [HttpPut]
-        [Route("Update/{id}")]
-        public async Task<IActionResult> UpdateSubject(int id, [FromBody] SubjectDTO dto)
-        {
-            var subject = await _subjectService.UpdateSubject(id, dto);
-            if (subject == null)
-            {
-                return NotFound(new { message = "المادة غير موجودة" });
-            }
-            return Ok(new { message = "تم تعديل المادة بنجاح", subject });
-        }
+
 
         // DELETE: api/subjects/Delete/5
         // حذف مادة

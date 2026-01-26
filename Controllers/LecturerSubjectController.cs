@@ -56,6 +56,19 @@ namespace ProfRate.Controllers
             return Ok(new { message = result.Message });
         }
 
+        // PUT: api/lecturersubjects/Update/5
+        [HttpPut]
+        [Route("Update/{id}")]
+        public async Task<IActionResult> Update(int id, [FromBody] ProfRate.DTOs.LecturerSubjectDTO model)
+        {
+            var result = await _service.UpdateLecturerSubject(id, model);
+            if (!result.Success)
+            {
+                return BadRequest(new { message = result.Message });
+            }
+            return Ok(new { message = result.Message });
+        }
+
         // DELETE: api/lecturersubjects/Delete/5
         [HttpDelete]
         [Route("Delete/{id}")]

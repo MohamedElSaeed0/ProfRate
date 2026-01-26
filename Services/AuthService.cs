@@ -28,6 +28,7 @@ namespace ProfRate.Services
             if (loginDto.UserType == "Admin")
             {
                 var admin = await _context.Admins
+                    .AsNoTracking()
                     .FirstOrDefaultAsync(a => a.Username == loginDto.Username && a.Password == loginDto.Password);
 
                 if (admin != null)
@@ -46,6 +47,7 @@ namespace ProfRate.Services
             else if (loginDto.UserType == "Student")
             {
                 var student = await _context.Students
+                    .AsNoTracking()
                     .FirstOrDefaultAsync(s => s.Username == loginDto.Username && s.Password == loginDto.Password);
 
                 if (student != null)
@@ -64,6 +66,7 @@ namespace ProfRate.Services
             else if (loginDto.UserType == "Lecturer")
             {
                 var lecturer = await _context.Lecturers
+                    .AsNoTracking()
                     .FirstOrDefaultAsync(l => l.Username == loginDto.Username && l.Password == loginDto.Password);
 
                 if (lecturer != null)

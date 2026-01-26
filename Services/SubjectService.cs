@@ -18,7 +18,7 @@ namespace ProfRate.Services
         // الحصول على كل المواد
         public async Task<List<Subject>> GetAllSubjects()
         {
-            return await _context.Subjects.ToListAsync();
+            return await _context.Subjects.AsNoTracking().ToListAsync();
         }
 
         // الحصول على مادة بالـ ID
@@ -40,23 +40,29 @@ namespace ProfRate.Services
             return subject;
         }
 
-        // تعديل مادة
-        public async Task<Subject?> UpdateSubject(int id, SubjectDTO dto)
-        {
-            var subject = await _context.Subjects.FindAsync(id);
-            if (subject == null) return null;
 
-            subject.SubjectName = dto.SubjectName;
-
-            await _context.SaveChangesAsync();
-            return subject;
-        }
 
         // حذف مادة
+        // حذف مادة (مع حذف كل بياناتها المرتبطة)
         public async Task<bool> DeleteSubject(int id)
         {
-            var subject = await _context.Subjects.FindAsync(id);
+            var subject = await _context.Subjects
+                .Include(s => s.Evaluations)
+                .Include(s => s.StudentSubjects)
+                .Include(s => s.LecturerSubjects)
+                .FirstOrDefaultAsync(s => s.SubjectId == id);
+
             if (subject == null) return false;
+
+            // Manual Cascade Delete
+            if (subject.Evaluations.Any())
+                _context.Evaluations.RemoveRange(subject.Evaluations);
+
+            if (subject.StudentSubjects.Any())
+                _context.StudentSubjects.RemoveRange(subject.StudentSubjects);
+
+            if (subject.LecturerSubjects.Any())
+                _context.LecturerSubjects.RemoveRange(subject.LecturerSubjects);
 
             _context.Subjects.Remove(subject);
             await _context.SaveChangesAsync();

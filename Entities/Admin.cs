@@ -1,6 +1,5 @@
 namespace ProfRate.Entities
 {
-    // الأدمن - مسؤول النظام
     public class Admin
     {
         public int AdminId { get; set; }

@@ -5,8 +5,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ProfRate - ربط المحاضرين بالمواد</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/style.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .search-results {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+
+        .search-item:hover {
+            background-color: #f8f9fa;
+        }
+    </style>
 </head>
 
 <body>
@@ -49,11 +73,12 @@
                 </div>
                 <form id="assignForm">
                     <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                        <div class="form-group" style="flex: 1;">
-                            <label class="form-label">المحاضر</label>
-                            <select class="form-control" id="lecturerId" required>
-                                <option value="">اختر المحاضر</option>
-                            </select>
+                        <div class="form-group" style="flex: 1; position: relative;">
+                            <label class="form-label">المحاضر (بحث)</label>
+                            <input type="hidden" id="selectedLecturerId">
+                            <input type="text" class="form-control" id="lecturerSearch"
+                                placeholder="ابحث باسم المحاضر..." autocomplete="off">
+                            <div id="lecturerResults" class="search-results"></div>
                         </div>
                         <div class="form-group" style="flex: 1;">
                             <label class="form-label">المادة</label>
@@ -93,24 +118,53 @@
         </main>
     </div>
 
-    <script src="../js/api.js"></script>
+    <!-- Edit Modal -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>تعديل تعيين المحاضر</h3>
+                <button class="modal-close" onclick="closeEditModal()">&times;</button>
+            </div>
+            <form id="editForm">
+                <input type="hidden" id="editId">
+                <input type="hidden" id="editLecturerId">
+                <div class="form-group">
+                    <label class="form-label">المحاضر (للاطلاع فقط)</label>
+                    <input type="text" class="form-control" id="editLecturerName" readonly disabled>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">المادة</label>
+                    <select class="form-control" id="editSubjectId" required>
+                        <option value="">اختر المادة</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-save"></i> حفظ التعديلات
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/api.js?v=2"></script>
     <script>
         checkAuth();
 
+        let allAssignments = [];
+
         async function loadData() {
-            const lecturers = await LecturersAPI.getAll();
-            if (lecturers.success) {
-                const select = document.getElementById('lecturerId');
-                lecturers.data.forEach(l => {
-                    select.innerHTML += `<option value="${l.lecturerId}">${l.firstName} ${l.lastName}</option>`;
-                });
-            }
+            // Setup Search for Lecturer
+            setupSearchDropdown('lecturerSearch', 'lecturerResults', LecturersAPI.search, (id) => {
+                document.getElementById('selectedLecturerId').value = id;
+            });
 
             const subjects = await SubjectsAPI.getAll();
             if (subjects.success) {
                 const select = document.getElementById('subjectId');
+                const editSelect = document.getElementById('editSubjectId');
                 subjects.data.forEach(s => {
-                    select.innerHTML += `<option value="${s.subjectId}">${s.subjectName}</option>`;
+                    const opt = `<option value="${s.subjectId}">${s.subjectName}</option>`;
+                    select.innerHTML += opt;
+                    editSelect.innerHTML += opt;
                 });
             }
 
@@ -126,18 +180,39 @@
                 return;
             }
 
+            allAssignments = result.data;
+
             tbody.innerHTML = result.data.map((a, i) => `
                 <tr>
                     <td>${i + 1}</td>
                     <td>${a.lecturer?.firstName || ''} ${a.lecturer?.lastName || ''}</td>
                     <td>${a.subject?.subjectName || ''}</td>
                     <td>
+                        <button class="btn btn-primary btn-sm" onclick="editAssignment(${a.lecturerSubjectId})">
+                            <i class="fas fa-edit"></i>
+                        </button>
                         <button class="btn btn-danger btn-sm" onclick="deleteAssignment(${a.lecturerSubjectId})">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
                 </tr>
             `).join('');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        function editAssignment(id) {
+            const assignment = allAssignments.find(a => a.lecturerSubjectId === id);
+            if (!assignment) return;
+
+            document.getElementById('editId').value = assignment.lecturerSubjectId;
+            document.getElementById('editLecturerId').value = assignment.lecturerId;
+            document.getElementById('editLecturerName').value = `${assignment.lecturer?.firstName} ${assignment.lecturer?.lastName}`;
+            document.getElementById('editSubjectId').value = assignment.subjectId;
+
+            document.getElementById('editModal').classList.add('active');
         }
 
         async function deleteAssignment(id) {
@@ -150,15 +225,42 @@
 
         document.getElementById('assignForm').addEventListener('submit', async function (e) {
             e.preventDefault();
+            const lecturerId = document.getElementById('selectedLecturerId').value;
+            if (!lecturerId) {
+                showAlert('الرجاء اختيار المحاضر من البحث', 'danger');
+                return;
+            }
+
             const result = await apiCall('/lecturersubjects/Add', 'POST', {
-                lecturerId: parseInt(document.getElementById('lecturerId').value),
+                lecturerId: parseInt(lecturerId),
                 subjectId: parseInt(document.getElementById('subjectId').value)
             });
             if (result.success) {
                 showAlert('تم ربط المحاضر بالمادة بنجاح');
                 loadAssignments();
             } else {
-                showAlert('حدث خطأ', 'danger');
+                showAlert(result.data.message || 'حدث خطأ', 'danger');
+            }
+        });
+
+        document.getElementById('editForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const id = document.getElementById('editId').value;
+            const lecturerId = document.getElementById('editLecturerId').value;
+            const subjectId = document.getElementById('editSubjectId').value;
+
+            const result = await apiCall(`/lecturersubjects/Update/${id}`, 'PUT', {
+                lecturerSubjectId: parseInt(id),
+                lecturerId: parseInt(lecturerId),
+                subjectId: parseInt(subjectId)
+            });
+
+            if (result.success) {
+                showAlert('تم تعديل التعيين بنجاح');
+                closeEditModal();
+                loadAssignments();
+            } else {
+                showAlert(result.data.message || 'حدث خطأ', 'danger');
             }
         });
 

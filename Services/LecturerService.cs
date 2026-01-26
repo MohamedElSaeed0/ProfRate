@@ -18,7 +18,21 @@ namespace ProfRate.Services
         // الحصول على كل المحاضرين
         public async Task<List<Lecturer>> GetAllLecturers()
         {
-            return await _context.Lecturers.ToListAsync();
+            return await _context.Lecturers.AsNoTracking().OrderBy(l => l.FirstName).ToListAsync();
+        }
+
+        // البحث عن محاضرين (بالاسم أو اسم المستخدم)
+        public async Task<List<Lecturer>> Search(string query)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+                return new List<Lecturer>();
+
+            return await _context.Lecturers
+                .AsNoTracking()
+                .Where(l => l.Username.Contains(query) || 
+                            (l.FirstName + " " + l.LastName).Contains(query))
+                .OrderBy(l => l.FirstName)
+                .ToListAsync();
         }
 
         // الحصول على محاضر بالـ ID
@@ -30,6 +44,9 @@ namespace ProfRate.Services
         // إضافة محاضر جديد
         public async Task<Lecturer> AddLecturer(LecturerDTO dto)
         {
+            if (await _context.Lecturers.AnyAsync(l => l.Username == dto.Username))
+                throw new InvalidOperationException("اسم المستخدم موجود بالفعل");
+
             var lecturer = new Lecturer
             {
                 FirstName = dto.FirstName,
@@ -50,6 +67,9 @@ namespace ProfRate.Services
             var lecturer = await _context.Lecturers.FindAsync(id);
             if (lecturer == null) return null;
 
+            if (await _context.Lecturers.AnyAsync(l => l.Username == dto.Username && l.LecturerId != id))
+                throw new InvalidOperationException("اسم المستخدم موجود بالفعل");
+
             lecturer.FirstName = dto.FirstName;
             lecturer.LastName = dto.LastName;
             lecturer.Username = dto.Username;
@@ -60,10 +80,22 @@ namespace ProfRate.Services
         }
 
         // حذف محاضر
+        // حذف محاضر (مع حذف كل بياناته المرتبطة)
         public async Task<bool> DeleteLecturer(int id)
         {
-            var lecturer = await _context.Lecturers.FindAsync(id);
+            var lecturer = await _context.Lecturers
+                .Include(l => l.Evaluations)
+                .Include(l => l.LecturerSubjects)
+                .FirstOrDefaultAsync(l => l.LecturerId == id);
+
             if (lecturer == null) return false;
+
+            // Manual Cascade Delete
+            if (lecturer.Evaluations.Any())
+                _context.Evaluations.RemoveRange(lecturer.Evaluations);
+
+            if (lecturer.LecturerSubjects.Any())
+                _context.LecturerSubjects.RemoveRange(lecturer.LecturerSubjects);
 
             _context.Lecturers.Remove(lecturer);
             await _context.SaveChangesAsync();

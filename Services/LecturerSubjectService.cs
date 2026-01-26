@@ -64,6 +64,46 @@ namespace ProfRate.Services
             return (true, "تم ربط المحاضر بالمادة بنجاح");
         }
 
+        // تعديل ربط
+        public async Task<(bool Success, string Message)> UpdateLecturerSubject(int id, LecturerSubjectDTO dto)
+        {
+            var entry = await _context.LecturerSubjects.FindAsync(id);
+            if (entry == null) return (false, "هذا السجل غير موجود");
+
+            bool exists = await _context.LecturerSubjects
+                .AnyAsync(ls => ls.LecturerId == dto.LecturerId && ls.SubjectId == dto.SubjectId && ls.LecturerSubjectId != id);
+
+            if (exists)
+            {
+                return (false, "هذا المحاضر معين بالفعل لهذه المادة");
+            }
+
+            // Capture old values
+            var oldLecturerId = entry.LecturerId;
+            var oldSubjectId = entry.SubjectId;
+
+            // Apply new values
+            entry.LecturerId = dto.LecturerId;
+            entry.SubjectId = dto.SubjectId;
+
+            // Cascade Update: Update related StudentAssignments
+            var affectedStudents = await _context.StudentSubjects
+                .Where(ss => ss.LecturerId == oldLecturerId && ss.SubjectId == oldSubjectId)
+                .ToListAsync();
+
+            if (affectedStudents.Any())
+            {
+                foreach (var studentSubject in affectedStudents)
+                {
+                    studentSubject.LecturerId = dto.LecturerId;
+                    studentSubject.SubjectId = dto.SubjectId; // Usually subject stays same in this specific edit scenario, but safe to sync
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return (true, "تم تعديل الربط بنجاح (وتم تحديث بيانات الطلاب المرتبطين)");
+        }
+
         // حذف ربط
         public async Task<bool> DeleteLecturerSubject(int id)
         {

@@ -7,6 +7,30 @@
     <title>ProfRate - ربط الطلاب بالمواد</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .search-results {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+
+        .search-item:hover {
+            background-color: #f8f9fa;
+        }
+    </style>
 </head>
 
 <body>
@@ -49,11 +73,12 @@
                 </div>
                 <form id="assignForm">
                     <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                        <div class="form-group" style="flex: 1;">
-                            <label class="form-label">الخظوة 1: اختر الطالب</label>
-                            <select class="form-control" id="studentId" required>
-                                <option value="">اختر الطالب</option>
-                            </select>
+                        <div class="form-group" style="flex: 1; position: relative;">
+                            <label class="form-label">الخظوة 1: ابحث واختر الطالب</label>
+                            <input type="hidden" id="selectedStudentId">
+                            <input type="text" class="form-control" id="studentSearch"
+                                placeholder="اكتب اسم الطالب للبحث..." autocomplete="off">
+                            <div id="studentResults" class="search-results"></div>
                         </div>
                         <div class="form-group" style="flex: 1;">
                             <label class="form-label">الخطوة 2: اختر المادة</label>
@@ -100,34 +125,77 @@
         </main>
     </div>
 
-    <script src="../js/api.js"></script>
+    <!-- Edit Modal -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>تعديل تعيين الطالب</h3>
+                <button class="modal-close" onclick="closeEditModal()">&times;</button>
+            </div>
+            <form id="editForm">
+                <input type="hidden" id="editId">
+                <input type="hidden" id="editStudentId">
+                <div class="form-group">
+                    <label class="form-label">الطالب (للاطلاع فقط)</label>
+                    <input type="text" class="form-control" id="editStudentName" readonly disabled>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">المادة</label>
+                    <select class="form-control" id="editSubjectId" required>
+                        <option value="">اختر المادة</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">المحاضر</label>
+                    <select class="form-control" id="editLecturerId" required>
+                        <option value="">اختر المحاضر</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-save"></i> حفظ التعديلات
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/api.js?v=2"></script>
     <script>
         checkAuth();
 
+        let allAssignments = [];
+
         async function loadData() {
-            const students = await StudentsAPI.getAll();
-            if (students.success) {
-                const select = document.getElementById('studentId');
-                students.data.forEach(s => {
-                    select.innerHTML += `<option value="${s.studentId}">${s.firstName} ${s.lastName}</option>`;
-                });
-            }
+            // Setup Search for Student
+            setupSearchDropdown('studentSearch', 'studentResults', StudentsAPI.search, (id) => {
+                document.getElementById('selectedStudentId').value = id;
+            });
 
             const subjects = await SubjectsAPI.getAll();
             if (subjects.success) {
                 const select = document.getElementById('subjectId');
+                const editSelect = document.getElementById('editSubjectId');
                 subjects.data.forEach(s => {
-                    select.innerHTML += `<option value="${s.subjectId}">${s.subjectName}</option>`;
+                    const opt = `<option value="${s.subjectId}">${s.subjectName}</option>`;
+                    select.innerHTML += opt;
+                    editSelect.innerHTML += opt;
                 });
             }
 
             loadAssignments();
         }
 
-        // عند تغيير المادة، حمل المحاضرين المعينين لها
+        // عند تغيير المادة (Form الرئيسي)
         document.getElementById('subjectId').addEventListener('change', async function () {
-            const subjectId = this.value;
-            const lecturerSelect = document.getElementById('lecturerId');
+            await loadLecturersForSubject(this.value, 'lecturerId');
+        });
+
+        // عند تغيير المادة (Form التعديل)
+        document.getElementById('editSubjectId').addEventListener('change', async function () {
+            await loadLecturersForSubject(this.value, 'editLecturerId');
+        });
+
+        async function loadLecturersForSubject(subjectId, targetSelectId) {
+            const lecturerSelect = document.getElementById(targetSelectId);
 
             if (!subjectId) {
                 lecturerSelect.innerHTML = '<option value="">اختر المادة أولاً</option>';
@@ -135,9 +203,7 @@
                 return;
             }
 
-            // جلب المحاضرين المعينين لهذه المادة
             const lecturers = await apiCall(`/lecturersubjects/GetBySubject/${subjectId}`);
-
             lecturerSelect.innerHTML = '<option value="">اختر المحاضر</option>';
 
             if (lecturers.success && lecturers.data.length > 0) {
@@ -146,11 +212,10 @@
                 });
                 lecturerSelect.disabled = false;
             } else {
-                lecturerSelect.innerHTML = '<option value="">لا يوجد محاضرين لهذه المادة بعد</option>';
+                lecturerSelect.innerHTML = '<option value="">لا يوجد محاضرين لهذه المادة</option>';
                 lecturerSelect.disabled = true;
-                showAlert('تنبيه: يجب تعيين محاضرين لهذه المادة أولاً من صفحة "ربط المحاضرين بالمواد"', 'warning');
             }
-        });
+        }
 
         async function loadAssignments() {
             const result = await apiCall('/studentsubjects/GetAll');
@@ -161,6 +226,8 @@
                 return;
             }
 
+            allAssignments = result.data;
+
             tbody.innerHTML = result.data.map((a, i) => `
                 <tr>
                     <td>${i + 1}</td>
@@ -168,12 +235,40 @@
                     <td>${a.subject?.subjectName || ''}</td>
                     <td>${a.lecturer ? (a.lecturer.firstName + ' ' + a.lecturer.lastName) : '<span style="color:red">غير محدد</span>'}</td>
                     <td>
+                        <button class="btn btn-primary btn-sm" onclick="editAssignment(${a.studentSubjectId})">
+                            <i class="fas fa-edit"></i>
+                        </button>
                         <button class="btn btn-danger btn-sm" onclick="deleteAssignment(${a.studentSubjectId})">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
                 </tr>
             `).join('');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        async function editAssignment(id) {
+            const assignment = allAssignments.find(a => a.studentSubjectId === id);
+            if (!assignment) return;
+
+            document.getElementById('editId').value = assignment.studentSubjectId;
+            document.getElementById('editStudentId').value = assignment.studentId;
+            document.getElementById('editStudentName').value = `${assignment.student?.firstName} ${assignment.student?.lastName}`;
+
+            // Set Subject
+            document.getElementById('editSubjectId').value = assignment.subjectId;
+
+            // Load lecturers then set lecturer
+            await loadLecturersForSubject(assignment.subjectId, 'editLecturerId');
+
+            if (assignment.lecturerId) {
+                document.getElementById('editLecturerId').value = assignment.lecturerId;
+            }
+
+            document.getElementById('editModal').classList.add('active');
         }
 
         async function deleteAssignment(id) {
@@ -187,20 +282,50 @@
         document.getElementById('assignForm').addEventListener('submit', async function (e) {
             e.preventDefault();
             const lecturerId = document.getElementById('lecturerId').value;
+            const studentId = document.getElementById('selectedStudentId').value;
 
-            if (!lecturerId) {
-                showAlert('الرجاء اختيار المحاضر', 'danger');
+            if (!lecturerId || !studentId) {
+                showAlert('الرجاء اختيار الطالب والمحاضر', 'danger');
                 return;
             }
 
             const result = await apiCall('/studentsubjects/Add', 'POST', {
-                studentId: parseInt(document.getElementById('studentId').value),
+                studentId: parseInt(studentId),
                 subjectId: parseInt(document.getElementById('subjectId').value),
                 lecturerId: parseInt(lecturerId)
             });
 
             if (result.success) {
                 showAlert('تم ربط الطالب بالمادة والمحاضر بنجاح');
+                loadAssignments();
+            } else {
+                showAlert(result.data.message || 'حدث خطأ', 'danger');
+            }
+        });
+
+        document.getElementById('editForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const id = document.getElementById('editId').value;
+            const studentId = document.getElementById('editStudentId').value;
+            const subjectId = document.getElementById('editSubjectId').value;
+            const lecturerId = document.getElementById('editLecturerId').value;
+
+            if (!lecturerId || !subjectId) {
+                showAlert('البيانات ناقصة', 'danger');
+                return;
+            }
+
+            // Call Update API
+            const result = await apiCall(`/studentsubjects/Update/${id}`, 'PUT', {
+                studentSubjectId: parseInt(id),
+                studentId: parseInt(studentId),
+                subjectId: parseInt(subjectId),
+                lecturerId: parseInt(lecturerId)
+            });
+
+            if (result.success) {
+                showAlert('تم تعديل التعيين بنجاح');
+                closeEditModal();
                 loadAssignments();
             } else {
                 showAlert(result.data.message || 'حدث خطأ', 'danger');

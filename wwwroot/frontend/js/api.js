@@ -43,19 +43,41 @@ const AuthAPI = {
 // ===== Students API =====
 const StudentsAPI = {
     getAll: () => apiCall('/students/GetAll'),
+    search: (query) => apiCall(`/students/Search?query=${query}`),
     getById: (id) => apiCall(`/students/GetById/${id}`),
     add: (data) => apiCall('/students/Add', 'POST', data),
     update: (id, data) => apiCall(`/students/Update/${id}`, 'PUT', data),
     delete: (id) => apiCall(`/students/Delete/${id}`, 'DELETE')
 };
 
+// ===== StudentSubjects API =====
+const StudentSubjectsAPI = {
+    getAll: () => apiCall('/studentsubjects/GetAll'),
+    getByStudent: (id) => apiCall(`/studentsubjects/GetByStudent/${id}`),
+    getBySubject: (id) => apiCall(`/studentsubjects/GetBySubject/${id}`),
+    add: (data) => apiCall('/studentsubjects/Add', 'POST', data),
+    update: (id, data) => apiCall(`/studentsubjects/Update/${id}`, 'PUT', data),
+    delete: (id) => apiCall(`/studentsubjects/Delete/${id}`, 'DELETE')
+};
+
 // ===== Lecturers API =====
 const LecturersAPI = {
     getAll: () => apiCall('/lecturers/GetAll'),
+    search: (query) => apiCall(`/lecturers/Search?query=${query}`),
     getById: (id) => apiCall(`/lecturers/GetById/${id}`),
     add: (data) => apiCall('/lecturers/Add', 'POST', data),
     update: (id, data) => apiCall(`/lecturers/Update/${id}`, 'PUT', data),
     delete: (id) => apiCall(`/lecturers/Delete/${id}`, 'DELETE')
+};
+
+// ===== LecturerSubjects API =====
+const LecturerSubjectsAPI = {
+    getAll: () => apiCall('/lecturersubjects/GetAll'),
+    getByLecturer: (id) => apiCall(`/lecturersubjects/GetByLecturer/${id}`),
+    getBySubject: (id) => apiCall(`/lecturersubjects/GetBySubject/${id}`),
+    add: (data) => apiCall('/lecturersubjects/Add', 'POST', data),
+    update: (id, data) => apiCall(`/lecturersubjects/Update/${id}`, 'PUT', data),
+    delete: (id) => apiCall(`/lecturersubjects/Delete/${id}`, 'DELETE')
 };
 
 // ===== Questions API =====
@@ -70,6 +92,7 @@ const QuestionsAPI = {
 const SubjectsAPI = {
     getAll: () => apiCall('/subjects/GetAll'),
     add: (data) => apiCall('/subjects/Add', 'POST', data),
+    update: (id, data) => apiCall(`/subjects/Update/${id}`, 'PUT', data),
     delete: (id) => apiCall(`/subjects/Delete/${id}`, 'DELETE')
 };
 
@@ -112,4 +135,52 @@ function logout() {
     localStorage.removeItem('userType');
     localStorage.removeItem('userId');
     window.location.href = '../login.html';
+    window.location.href = '../login.html';
+}
+
+// إعداد قائمة بحث منسدلة (Searchable Dropdown)
+function setupSearchDropdown(inputId, listId, apiSearchFn, onSelect) {
+    const input = document.getElementById(inputId);
+    const list = document.getElementById(listId);
+    let timeout = null;
+
+    input.addEventListener('input', function () {
+        const query = this.value;
+        if (query.length < 1) {
+            list.style.display = 'none';
+            return;
+        }
+
+        clearTimeout(timeout);
+        timeout = setTimeout(async () => {
+            const result = await apiSearchFn(query);
+            if (result.success && result.data.length > 0) {
+                list.innerHTML = result.data.map(item =>
+                    `<div class="search-item" data-id="${item.studentId || item.lecturerId}">
+                        ${item.firstName} ${item.lastName} (${item.username})
+                    </div>`
+                ).join('');
+                list.style.display = 'block';
+
+                // Handle Selection
+                document.querySelectorAll(`#${listId} .search-item`).forEach(div => {
+                    div.addEventListener('click', function () {
+                        input.value = this.innerText;
+                        list.style.display = 'none';
+                        onSelect(this.getAttribute('data-id'));
+                    });
+                });
+            } else {
+                list.innerHTML = '<div class="search-item disabled">لا توجد نتائج</div>';
+                list.style.display = 'block';
+            }
+        }, 300); // Debounce
+    });
+
+    // Hide list when clicking outside
+    document.addEventListener('click', function (e) {
+        if (e.target !== input && e.target !== list) {
+            list.style.display = 'none';
+        }
+    });
 }

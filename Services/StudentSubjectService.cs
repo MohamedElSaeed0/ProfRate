@@ -59,6 +59,29 @@ namespace ProfRate.Services
             return (true, "تم ربط الطالب بالمادة بنجاح");
         }
 
+        // تعديل ربط
+        public async Task<(bool Success, string Message)> UpdateStudentSubject(int id, StudentSubjectDTO dto)
+        {
+            var entry = await _context.StudentSubjects.FindAsync(id);
+            if (entry == null) return (false, "هذا السجل غير موجود");
+
+            // التحقق من عدم التكرار (لو غيرنا الطالب أو المادة)
+            bool exists = await _context.StudentSubjects
+                .AnyAsync(ss => ss.StudentId == dto.StudentId && ss.SubjectId == dto.SubjectId && ss.StudentSubjectId != id);
+
+            if (exists)
+            {
+                return (false, "هذا الطالب مسجل بالفعل في هذه المادة");
+            }
+
+            entry.StudentId = dto.StudentId;
+            entry.SubjectId = dto.SubjectId;
+            entry.LecturerId = dto.LecturerId;
+
+            await _context.SaveChangesAsync();
+            return (true, "تم تعديل الربط بنجاح");
+        }
+
         // حذف ربط
         public async Task<bool> DeleteStudentSubject(int id)
         {

@@ -54,10 +54,17 @@ namespace ProfRate.Services
         }
 
         // حذف سؤال
+        // حذف سؤال (مع حذف تقييماته المرتبطة)
         public async Task<bool> DeleteQuestion(int id)
         {
-            var question = await _context.Questions.FindAsync(id);
+            var question = await _context.Questions
+                .Include(q => q.Evaluations)
+                .FirstOrDefaultAsync(q => q.QuestionId == id);
+
             if (question == null) return false;
+
+            if (question.Evaluations.Any())
+                _context.Evaluations.RemoveRange(question.Evaluations);
 
             _context.Questions.Remove(question);
             await _context.SaveChangesAsync();

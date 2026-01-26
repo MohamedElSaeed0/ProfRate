@@ -72,6 +72,7 @@
                 <button class="modal-close" onclick="closeModal()">&times;</button>
             </div>
             <form id="questionForm">
+                <input type="hidden" id="questionId">
                 <div class="form-group">
                     <label class="form-label">نص السؤال</label>
                     <textarea class="form-control" id="questionText" rows="3" required
@@ -87,6 +88,8 @@
     <script>
         checkAuth();
 
+        let allQuestions = [];
+
         async function loadQuestions() {
             const result = await QuestionsAPI.getAll();
             const tbody = document.getElementById('questionsTable');
@@ -94,19 +97,37 @@
                 tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">لا توجد أسئلة</td></tr>';
                 return;
             }
+            allQuestions = result.data;
             tbody.innerHTML = result.data.map((q, i) => `
                 <tr>
                     <td>${i + 1}</td>
                     <td>${q.questionText}</td>
                     <td>
+                        <button class="btn btn-primary btn-sm" onclick="editQuestion(${q.questionId})"><i class="fas fa-edit"></i></button>
                         <button class="btn btn-danger btn-sm" onclick="deleteQuestion(${q.questionId})"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>
             `).join('');
         }
 
-        function openModal() { document.getElementById('questionModal').classList.add('active'); }
+        function openModal() {
+            document.getElementById('questionModal').classList.add('active');
+            document.getElementById('questionForm').reset();
+            document.getElementById('questionId').value = '';
+            document.querySelector('.modal-header h3').textContent = 'إضافة سؤال جديد';
+        }
+
         function closeModal() { document.getElementById('questionModal').classList.remove('active'); }
+
+        function editQuestion(id) {
+            const question = allQuestions.find(q => q.questionId === id);
+            if (question) {
+                document.getElementById('questionId').value = question.questionId;
+                document.getElementById('questionText').value = question.questionText;
+                document.querySelector('.modal-header h3').textContent = 'تعديل السؤال';
+                document.getElementById('questionModal').classList.add('active');
+            }
+        }
 
         async function deleteQuestion(id) {
             if (confirm('هل أنت متأكد من حذف هذا السؤال؟')) {
@@ -118,12 +139,22 @@
 
         document.getElementById('questionForm').addEventListener('submit', async function (e) {
             e.preventDefault();
-            const result = await QuestionsAPI.add({ questionText: document.getElementById('questionText').value, adminId: 1 });
+            const id = document.getElementById('questionId').value;
+            const text = document.getElementById('questionText').value;
+
+            let result;
+            if (id) {
+                result = await QuestionsAPI.update(id, { questionText: text, adminId: 1, questionId: parseInt(id) });
+            } else {
+                result = await QuestionsAPI.add({ questionText: text, adminId: 1 });
+            }
+
             if (result.success) {
-                showAlert('تم إضافة السؤال بنجاح');
+                showAlert(id ? 'تم تعديل السؤال بنجاح' : 'تم إضافة السؤال بنجاح');
                 closeModal();
-                document.getElementById('questionForm').reset();
                 loadQuestions();
+            } else {
+                showAlert('حدث خطأ', 'danger');
             }
         });
 
