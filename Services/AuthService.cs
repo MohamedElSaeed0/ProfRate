@@ -40,7 +40,9 @@ namespace ProfRate.Services
                         Message = "تم تسجيل الدخول بنجاح",
                         Token = token,
                         UserType = "Admin",
-                        UserId = admin.AdminId
+                        UserId = admin.AdminId,
+                        FirstName = admin.FirstName,
+                        FullName = admin.FirstName + " " + admin.LastName
                     };
                 }
             }
@@ -59,7 +61,9 @@ namespace ProfRate.Services
                         Message = "تم تسجيل الدخول بنجاح",
                         Token = token,
                         UserType = "Student",
-                        UserId = student.StudentId
+                        UserId = student.StudentId,
+                        FirstName = student.FirstName,
+                        FullName = student.FirstName + " " + student.LastName
                     };
                 }
             }
@@ -78,7 +82,9 @@ namespace ProfRate.Services
                         Message = "تم تسجيل الدخول بنجاح",
                         Token = token,
                         UserType = "Lecturer",
-                        UserId = lecturer.LecturerId
+                        UserId = lecturer.LecturerId,
+                        FirstName = lecturer.FirstName,
+                        FullName = lecturer.FirstName + " " + lecturer.LastName
                     };
                 }
             }

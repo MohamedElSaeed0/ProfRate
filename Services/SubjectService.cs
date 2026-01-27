@@ -28,8 +28,18 @@ namespace ProfRate.Services
         }
 
         // إضافة مادة جديدة
-        public async Task<Subject> AddSubject(SubjectDTO dto)
+        public async Task<Subject?> AddSubject(SubjectDTO dto)
         {
+            // التحقق من عدم وجود مادة بنفس الاسم
+            var existingSubject = await _context.Subjects
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.SubjectName.ToLower() == dto.SubjectName.ToLower());
+            
+            if (existingSubject != null)
+            {
+                return null; // المادة موجودة مسبقاً
+            }
+
             var subject = new Subject
             {
                 SubjectName = dto.SubjectName

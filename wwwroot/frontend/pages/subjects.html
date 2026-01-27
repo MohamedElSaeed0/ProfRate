@@ -124,6 +124,8 @@
                 closeModal();
                 document.getElementById('subjectForm').reset();
                 loadSubjects();
+            } else {
+                showAlert(result.data.message || 'حدث خطأ أثناء إضافة المادة', 'danger');
             }
         });
 

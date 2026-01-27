@@ -22,7 +22,6 @@ namespace ProfRate.Services
         }
 
         // البحث عن محاضرين (بالاسم أو اسم المستخدم)
-        // البحث عن محاضرين (بالاسم أو اسم المستخدم)
         public async Task<List<Lecturer>> Search(string query)
         {
             if (string.IsNullOrWhiteSpace(query))

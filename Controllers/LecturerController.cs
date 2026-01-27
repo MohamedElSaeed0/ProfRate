@@ -20,25 +20,45 @@ namespace ProfRate.Controllers
         // الحصول على كل المحاضرين
         [HttpGet]
         [Route("GetAll")]
+        [Authorize] // يتطلب تسجيل الدخول
         public async Task<IActionResult> GetAllLecturers()
         {
             var lecturers = await _lecturerService.GetAllLecturers();
-            return Ok(lecturers);
+            // تحويل لـ DTO بدون الباسورد
+            var safeLecturers = lecturers.Select(l => new LecturerResponseDTO
+            {
+                LecturerId = l.LecturerId,
+                FirstName = l.FirstName,
+                LastName = l.LastName,
+                Username = l.Username,
+                AdminId = l.AdminId
+            });
+            return Ok(safeLecturers);
         }
 
         // GET: api/lecturers/Search?query=...
         [HttpGet]
         [Route("Search")]
+        [Authorize] // يتطلب تسجيل الدخول
         public async Task<IActionResult> Search([FromQuery] string query)
         {
             var lecturers = await _lecturerService.Search(query);
-            return Ok(lecturers);
+            var safeLecturers = lecturers.Select(l => new LecturerResponseDTO
+            {
+                LecturerId = l.LecturerId,
+                FirstName = l.FirstName,
+                LastName = l.LastName,
+                Username = l.Username,
+                AdminId = l.AdminId
+            });
+            return Ok(safeLecturers);
         }
 
         // GET: api/lecturers/GetById/5
         // الحصول على محاضر بالـ ID
         [HttpGet]
         [Route("GetById/{id}")]
+        [Authorize(Roles = "Admin")] // الأدمن فقط
         public async Task<IActionResult> GetLecturerById(int id)
         {
             var lecturer = await _lecturerService.GetLecturerById(id);
@@ -46,6 +66,7 @@ namespace ProfRate.Controllers
             {
                 return NotFound(new { message = "المحاضر غير موجود" });
             }
+            // للأدمن نرجع كل البيانات عشان يقدر يعدل
             return Ok(lecturer);
         }
 
@@ -53,16 +74,29 @@ namespace ProfRate.Controllers
         // إضافة محاضر جديد
         [HttpPost]
         [Route("Add")]
+        [Authorize(Roles = "Admin")] // الأدمن فقط يقدر يضيف
         public async Task<IActionResult> AddLecturer([FromBody] LecturerDTO dto)
         {
-            var lecturer = await _lecturerService.AddLecturer(dto);
-            return Ok(new { message = "تمت إضافة المحاضر بنجاح", lecturer });
+            try
+            {
+                var lecturer = await _lecturerService.AddLecturer(dto);
+                return Ok(new { message = "تمت إضافة المحاضر بنجاح", lecturer });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { message = "حدث خطأ أثناء إضافة المحاضر" });
+            }
         }
 
         // PUT: api/lecturers/Update/5
         // تعديل محاضر
         [HttpPut]
         [Route("Update/{id}")]
+        [Authorize(Roles = "Admin")] // الأدمن فقط يقدر يعدل
         public async Task<IActionResult> UpdateLecturer(int id, [FromBody] LecturerDTO dto)
         {
             var lecturer = await _lecturerService.UpdateLecturer(id, dto);
@@ -77,6 +111,7 @@ namespace ProfRate.Controllers
         // حذف محاضر
         [HttpDelete]
         [Route("Delete/{id}")]
+        [Authorize(Roles = "Admin")] // الأدمن فقط يقدر يحذف
         public async Task<IActionResult> DeleteLecturer(int id)
         {
             var result = await _lecturerService.DeleteLecturer(id);

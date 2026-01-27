@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProfRate.Data;
@@ -19,6 +20,7 @@ namespace ProfRate.Controllers
         // GET: api/lecturersubjects/GetAll
         [HttpGet]
         [Route("GetAll")]
+        [Authorize] // يتطلب تسجيل الدخول
         public async Task<IActionResult> GetAll()
         {
             var list = await _service.GetAll();
@@ -28,6 +30,7 @@ namespace ProfRate.Controllers
         // GET: api/lecturersubjects/GetByLecturer/5
         [HttpGet]
         [Route("GetByLecturer/{lecturerId}")]
+        [Authorize] // يتطلب تسجيل الدخول
         public async Task<IActionResult> GetByLecturer(int lecturerId)
         {
             var list = await _service.GetByLecturer(lecturerId);
@@ -37,6 +40,7 @@ namespace ProfRate.Controllers
         // GET: api/lecturersubjects/GetBySubject/5
         [HttpGet]
         [Route("GetBySubject/{subjectId}")]
+        [Authorize] // يتطلب تسجيل الدخول
         public async Task<IActionResult> GetBySubject(int subjectId)
         {
             var list = await _service.GetBySubject(subjectId);
@@ -46,6 +50,7 @@ namespace ProfRate.Controllers
         // POST: api/lecturersubjects/Add
         [HttpPost]
         [Route("Add")]
+        [Authorize(Roles = "Admin")] // الأدمن فقط
         public async Task<IActionResult> Add([FromBody] ProfRate.DTOs.LecturerSubjectDTO model)
         {
             var result = await _service.AddLecturerSubject(model);
@@ -59,6 +64,7 @@ namespace ProfRate.Controllers
         // PUT: api/lecturersubjects/Update/5
         [HttpPut]
         [Route("Update/{id}")]
+        [Authorize(Roles = "Admin")] // الأدمن فقط
         public async Task<IActionResult> Update(int id, [FromBody] ProfRate.DTOs.LecturerSubjectDTO model)
         {
             var result = await _service.UpdateLecturerSubject(id, model);
@@ -72,6 +78,7 @@ namespace ProfRate.Controllers
         // DELETE: api/lecturersubjects/Delete/5
         [HttpDelete]
         [Route("Delete/{id}")]
+        [Authorize(Roles = "Admin")] // الأدمن فقط
         public async Task<IActionResult> Delete(int id)
         {
             var success = await _service.DeleteLecturerSubject(id);
@@ -83,3 +90,4 @@ namespace ProfRate.Controllers
         }
     }
 }
+

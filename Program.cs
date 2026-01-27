@@ -52,8 +52,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// 6. إضافة الـ CORS (للسماح للـ Frontend بالتواصل)
-// 6. إضافة الـ CORS (للسماح للـ Frontend بالتواصل)
+// 6. إضافة الـ CORS
 var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? new[] { "*" };
 builder.Services.AddCors(options =>
 {
@@ -97,7 +96,51 @@ builder.Services.AddRateLimiter(options =>
 
 var app = builder.Build();
 
-// ===== Configure the HTTP request pipeline =====
+// ===== Database Seeding - إنشاء Admin افتراضي =====
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    
+    // إنشاء أو تحديث Admin افتراضي
+    var existingAdmin = context.Admins.FirstOrDefault(a => a.Username == "admin");
+    if (existingAdmin == null)
+    {
+        context.Admins.Add(new ProfRate.Entities.Admin
+        {
+            Username = "admin",
+            Password = "admin123",
+            FirstName = "System",
+            LastName = "Admin"
+        });
+        context.SaveChanges();
+        Console.WriteLine("✅ تم إنشاء Admin افتراضي: admin / admin123");
+    }
+    else
+    {
+        // تحديث البيانات لو ناقصة
+        bool updated = false;
+        if (existingAdmin.Password != "admin123")
+        {
+            existingAdmin.Password = "admin123";
+            updated = true;
+        }
+        if (string.IsNullOrEmpty(existingAdmin.FirstName))
+        {
+            existingAdmin.FirstName = "System";
+            updated = true;
+        }
+        if (string.IsNullOrEmpty(existingAdmin.LastName))
+        {
+            existingAdmin.LastName = "Admin";
+            updated = true;
+        }
+        if (updated)
+        {
+            context.SaveChanges();
+            Console.WriteLine("✅ تم تحديث Admin: admin / admin123");
+        }
+    }
+}
 
 // ===== Configure the HTTP request pipeline =====
 app.UseMiddleware<ProfRate.Middleware.ExceptionMiddleware>();
@@ -114,7 +157,7 @@ app.UseDefaultFiles();
 app.UseStaticFiles();
 
 // HTTPS Redirection
-app.UseHttpsRedirection();
+ app.UseHttpsRedirection();
 
 // CORS
 app.UseCors("AllowSpecificOrigins");
@@ -131,6 +174,7 @@ app.MapControllers();
 
 // Redirect root to frontend
 app.MapGet("/", () => Results.Redirect("/frontend/login.html"));
+app.MapGet("/login.html", () => Results.Redirect("/frontend/login.html"));
 
 // تشغيل التطبيق
 app.Run();

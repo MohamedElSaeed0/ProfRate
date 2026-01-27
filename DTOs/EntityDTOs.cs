@@ -113,4 +113,24 @@ namespace ProfRate.DTOs
         [Required]
         public int SubjectId { get; set; }
     }
+
+    // DTO للـ Response بدون كلمة المرور - للأمان
+    public class StudentResponseDTO
+    {
+        public int StudentId { get; set; }
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string Username { get; set; } = string.Empty;
+        public int AdminId { get; set; }
+    }
+
+    // DTO للـ Response بدون كلمة المرور - للأمان
+    public class LecturerResponseDTO
+    {
+        public int LecturerId { get; set; }
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string Username { get; set; } = string.Empty;
+        public int AdminId { get; set; }
+    }
 }

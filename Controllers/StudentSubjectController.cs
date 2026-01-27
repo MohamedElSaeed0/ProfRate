@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProfRate.Data;
@@ -19,6 +20,7 @@ namespace ProfRate.Controllers
         // GET: api/studentsubjects/GetAll
         [HttpGet]
         [Route("GetAll")]
+        [Authorize] // يتطلب تسجيل الدخول
         public async Task<IActionResult> GetAll()
         {
             var list = await _service.GetAll();
@@ -28,6 +30,7 @@ namespace ProfRate.Controllers
         // GET: api/studentsubjects/GetByStudent/5
         [HttpGet]
         [Route("GetByStudent/{studentId}")]
+        [Authorize] // يتطلب تسجيل الدخول
         public async Task<IActionResult> GetByStudent(int studentId)
         {
             var list = await _service.GetByStudent(studentId);
@@ -37,6 +40,7 @@ namespace ProfRate.Controllers
         // POST: api/studentsubjects/Add
         [HttpPost]
         [Route("Add")]
+        [Authorize(Roles = "Admin")] // الأدمن فقط
         public async Task<IActionResult> Add([FromBody] ProfRate.DTOs.StudentSubjectDTO model)
         {
             var result = await _service.AddStudentSubject(model);
@@ -50,6 +54,7 @@ namespace ProfRate.Controllers
         // PUT: api/studentsubjects/Update/5
         [HttpPut]
         [Route("Update/{id}")]
+        [Authorize(Roles = "Admin")] // الأدمن فقط
         public async Task<IActionResult> Update(int id, [FromBody] ProfRate.DTOs.StudentSubjectDTO model)
         {
             var result = await _service.UpdateStudentSubject(id, model);
@@ -63,6 +68,7 @@ namespace ProfRate.Controllers
         // DELETE: api/studentsubjects/Delete/5
         [HttpDelete]
         [Route("Delete/{id}")]
+        [Authorize(Roles = "Admin")] // الأدمن فقط
         public async Task<IActionResult> Delete(int id)
         {
             var success = await _service.DeleteStudentSubject(id);
@@ -74,3 +80,4 @@ namespace ProfRate.Controllers
         }
     }
 }
+

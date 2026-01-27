@@ -138,7 +138,7 @@ namespace ProfRate.Services
                 .Select(g => new EvaluationResponseDTO
                 {
                     EvaluationId = g.First().EvaluationId, // مجرد ID تمثيلي
-                    Rating = (int)Math.Round(g.Average(e => e.Rating)), // متوسط التقييم للأيئلة
+                    Rating = (int)Math.Round(g.Average(e => e.Rating)), // متوسط التقييم للأسئلة
                     IsArchived = false,
                     StudentName = g.Key.StudentFirstName + " " + g.Key.StudentLastName,
                     LecturerName = g.Key.LecturerFirstName + " " + g.Key.LecturerLastName,

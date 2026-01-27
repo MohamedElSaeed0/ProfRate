@@ -80,7 +80,7 @@
         <main class="main-content">
             <div class="page-header">
                 <h2 class="page-title">لوحة التحكم</h2>
-                <span id="welcomeMessage">مرحباً بك</span>
+                <h2 id="welcomeMessage" style="margin: 0;">مرحباً بك</h2>
             </div>
 
             <!-- Stats Cards -->
@@ -146,12 +146,22 @@
         // التحقق من تسجيل الدخول
         checkAuth();
 
+        // عرض اسم المستخدم
+        const fullName = localStorage.getItem('fullName');
+        const firstName = localStorage.getItem('firstName');
+        if (fullName && fullName !== 'null' && fullName !== 'undefined' && fullName !== '') {
+            document.getElementById('welcomeMessage').textContent = 'مرحباً: ' + fullName;
+        } else if (firstName && firstName !== 'null' && firstName !== 'undefined' && firstName !== '') {
+            document.getElementById('welcomeMessage').textContent = 'مرحباً: ' + firstName;
+        }
+
         // تحميل الإحصائيات
         async function loadStats() {
             // عدد الطلاب
             const students = await StudentsAPI.getAll();
             if (students.success) {
-                document.getElementById('studentsCount').textContent = students.data.length;
+                // Students returns PagedResult, so check totalCount
+                document.getElementById('studentsCount').textContent = students.data.totalCount || 0;
             }
 
             // عدد المحاضرين

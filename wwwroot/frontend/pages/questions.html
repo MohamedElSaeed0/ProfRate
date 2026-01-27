@@ -144,9 +144,9 @@
 
             let result;
             if (id) {
-                result = await QuestionsAPI.update(id, { questionText: text, adminId: 1, questionId: parseInt(id) });
+                result = await QuestionsAPI.update(id, { questionText: text, adminId: parseInt(localStorage.getItem('userId')) || 1, questionId: parseInt(id) });
             } else {
-                result = await QuestionsAPI.add({ questionText: text, adminId: 1 });
+                result = await QuestionsAPI.add({ questionText: text, adminId: parseInt(localStorage.getItem('userId')) || 1 });
             }
 
             if (result.success) {

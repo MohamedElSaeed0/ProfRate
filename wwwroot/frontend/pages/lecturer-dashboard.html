@@ -19,6 +19,8 @@
             <ul class="nav-menu">
                 <li class="nav-item"><a href="lecturer-dashboard.html" class="nav-link active"><i
                             class="fas fa-chart-line"></i><span>تقييماتي</span></a></li>
+                <li class="nav-item"><a href="all-ratings.html" class="nav-link"><i
+                            class="fas fa-users"></i><span>تقييمات الجميع</span></a></li>
                 <li class="nav-item"><a href="#" class="nav-link" onclick="logout()"><i
                             class="fas fa-sign-out-alt"></i><span>تسجيل الخروج</span></a></li>
             </ul>
@@ -70,6 +72,12 @@
     <script src="../js/api.js"></script>
     <script>
         checkAuth();
+
+        // عرض اسم المستخدم
+        const fullName = localStorage.getItem('fullName');
+        if (fullName && fullName !== 'null' && fullName !== 'undefined' && fullName !== '') {
+            document.querySelector('.page-title').textContent = 'مرحباً: د.' + fullName;
+        }
 
         const lecturerId = localStorage.getItem('userId');
 

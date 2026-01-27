@@ -280,7 +280,7 @@
                 lastName: document.getElementById('lastName').value.trim(),
                 username: document.getElementById('username').value.trim(),
                 password: document.getElementById('password').value,
-                adminId: 1
+                adminId: parseInt(localStorage.getItem('userId')) || 1
             };
 
             // Validation Check

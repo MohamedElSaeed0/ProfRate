@@ -20,6 +20,7 @@ namespace ProfRate.Controllers
         // الحصول على كل المواد
         [HttpGet]
         [Route("GetAll")]
+        [Authorize] // يتطلب تسجيل الدخول
         public async Task<IActionResult> GetAllSubjects()
         {
             var subjects = await _subjectService.GetAllSubjects();
@@ -30,6 +31,7 @@ namespace ProfRate.Controllers
         // الحصول على مادة بالـ ID
         [HttpGet]
         [Route("GetById/{id}")]
+        [Authorize] // يتطلب تسجيل الدخول
         public async Task<IActionResult> GetSubjectById(int id)
         {
             var subject = await _subjectService.GetSubjectById(id);
@@ -44,9 +46,14 @@ namespace ProfRate.Controllers
         // إضافة مادة جديدة
         [HttpPost]
         [Route("Add")]
+        [Authorize(Roles = "Admin")] // الأدمن فقط يقدر يضيف
         public async Task<IActionResult> AddSubject([FromBody] SubjectDTO dto)
         {
             var subject = await _subjectService.AddSubject(dto);
+            if (subject == null)
+            {
+                return BadRequest(new { message = "المادة موجودة مسبقاً" });
+            }
             return Ok(new { message = "تمت إضافة المادة بنجاح", subject });
         }
 
@@ -56,6 +63,7 @@ namespace ProfRate.Controllers
         // حذف مادة
         [HttpDelete]
         [Route("Delete/{id}")]
+        [Authorize(Roles = "Admin")] // الأدمن فقط يقدر يحذف
         public async Task<IActionResult> DeleteSubject(int id)
         {
             var result = await _subjectService.DeleteSubject(id);
@@ -67,3 +75,4 @@ namespace ProfRate.Controllers
         }
     }
 }
+

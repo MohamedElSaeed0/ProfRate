@@ -20,6 +20,7 @@ namespace ProfRate.Controllers
         // الحصول على كل الأسئلة
         [HttpGet]
         [Route("GetAll")]
+        [Authorize] // يتطلب تسجيل الدخول
         public async Task<IActionResult> GetAllQuestions()
         {
             var questions = await _questionService.GetAllQuestions();
@@ -30,6 +31,7 @@ namespace ProfRate.Controllers
         // الحصول على سؤال بالـ ID
         [HttpGet]
         [Route("GetById/{id}")]
+        [Authorize] // يتطلب تسجيل الدخول
         public async Task<IActionResult> GetQuestionById(int id)
         {
             var question = await _questionService.GetQuestionById(id);
@@ -44,6 +46,7 @@ namespace ProfRate.Controllers
         // إضافة سؤال جديد
         [HttpPost]
         [Route("Add")]
+        [Authorize(Roles = "Admin")] // الأدمن فقط يقدر يضيف
         public async Task<IActionResult> AddQuestion([FromBody] QuestionDTO dto)
         {
             var question = await _questionService.AddQuestion(dto);
@@ -54,6 +57,7 @@ namespace ProfRate.Controllers
         // تعديل سؤال
         [HttpPut]
         [Route("Update/{id}")]
+        [Authorize(Roles = "Admin")] // الأدمن فقط يقدر يعدل
         public async Task<IActionResult> UpdateQuestion(int id, [FromBody] QuestionDTO dto)
         {
             var question = await _questionService.UpdateQuestion(id, dto);
@@ -68,6 +72,7 @@ namespace ProfRate.Controllers
         // حذف سؤال
         [HttpDelete]
         [Route("Delete/{id}")]
+        [Authorize(Roles = "Admin")] // الأدمن فقط يقدر يحذف
         public async Task<IActionResult> DeleteQuestion(int id)
         {
             var result = await _questionService.DeleteQuestion(id);
@@ -79,3 +84,4 @@ namespace ProfRate.Controllers
         }
     }
 }
+

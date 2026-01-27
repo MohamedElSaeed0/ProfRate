@@ -25,21 +25,38 @@ async function apiCall(endpoint, method = 'GET', data = null) {
 
     try {
         const response = await fetch(`${API_URL}${endpoint}`, options);
+
+        // Handle error responses
+        if (!response.ok) {
+            try {
+                const errJson = await response.json();
+                console.error('API Error Details:', errJson);
+
+                if (response.status === 401) {
+                    // لا تعمل redirect لو الـ endpoint هو login
+                    if (!endpoint.includes('/auth/login')) {
+                        localStorage.clear();
+                        window.location.href = '/frontend/login.html';
+                        return { success: false, data: { message: 'انتهت الجلسة' } };
+                    }
+                }
+                return { success: false, data: errJson };
+            } catch {
+                // لو مش JSON
+                console.error('API Error:', response.status, response.statusText);
+                return { success: false, data: { message: `خطأ في الخادم: ${response.status}` } };
+            }
+        }
+
         const result = await response.json();
-        return { success: response.ok, data: result };
+        return { success: true, data: result };
+
     } catch (error) {
-        console.error('API Error:', error);
+        console.error('API Network Error:', error);
 
         if (error.message === 'Failed to fetch') {
             return { success: false, data: { message: 'لا يمكن الاتصال بالسيرفر، تأكد من تشغيل الباك إند' } };
         }
-
-        if (error.status === 401) {
-            localStorage.clear();
-            window.location.href = '/frontend/login.html';
-            return { success: false, data: { message: 'انتهت الجلسة، يرجى تسجيل الدخول مرة أخرى' } };
-        }
-
         return { success: false, data: { message: error.message || 'حدث خطأ غير متوقع' } };
     }
 }
@@ -134,7 +151,7 @@ function checkAuth() {
     const userType = localStorage.getItem('userType');
 
     if (!token) {
-        window.location.href = '../login.html';
+        window.location.href = '/frontend/login.html';
         return false;
     }
     return { token, userType };
@@ -145,8 +162,7 @@ function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('userType');
     localStorage.removeItem('userId');
-    window.location.href = '../login.html';
-    window.location.href = '../login.html';
+    window.location.href = '/frontend/login.html';
 }
 
 // إعداد قائمة بحث منسدلة (Searchable Dropdown)

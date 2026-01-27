@@ -31,6 +31,7 @@
         <main class="main-content">
             <div class="page-header">
                 <h2 class="page-title">مرحباً بك</h2>
+                <span id="welcomeMessage"></span>
             </div>
 
             <div class="stats-grid">
@@ -63,6 +64,12 @@
     <script src="../js/api.js"></script>
     <script>
         checkAuth();
+
+        // عرض اسم المستخدم
+        const fullName = localStorage.getItem('fullName');
+        if (fullName && fullName !== 'null' && fullName !== 'undefined' && fullName !== '') {
+            document.querySelector('.page-title').textContent = 'مرحباً: ' + fullName;
+        }
 
         async function loadStats() {
             const lecturers = await LecturersAPI.getAll();

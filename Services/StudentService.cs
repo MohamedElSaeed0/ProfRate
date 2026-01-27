@@ -15,7 +15,6 @@ namespace ProfRate.Services
             _context = context;
         }
 
-        // الحصول على كل الطلاب
         // الحصول على كل الطلاب (مع Pagination)
         public async Task<PagedResult<Student>> GetAllStudents(int page = 1, int pageSize = 20)
         {
@@ -38,7 +37,6 @@ namespace ProfRate.Services
             };
         }
 
-        // البحث عن طلاب (بالاسم أو اسم المستخدم)
         // البحث عن طلاب (بالاسم أو اسم المستخدم)
         public async Task<List<Student>> Search(string query)
         {
@@ -68,6 +66,10 @@ namespace ProfRate.Services
         // إضافة طالب جديد
         public async Task<Student> AddStudent(StudentDTO dto)
         {
+            // التحقق من عدم تكرار اسم المستخدم
+            if (await _context.Students.AnyAsync(s => s.Username == dto.Username))
+                throw new InvalidOperationException("اسم المستخدم موجود بالفعل");
+
             var student = new Student
             {
                 FirstName = dto.FirstName,
@@ -97,7 +99,6 @@ namespace ProfRate.Services
             return student;
         }
 
-        // حذف طالب
         // حذف طالب (مع حذف كل بياناته المرتبطة)
         public async Task<bool> DeleteStudent(int id)
         {
