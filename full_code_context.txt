@@ -1,5 +1,5 @@
 ﻿# ProfRate Full Code Context
-# Generated: 2026-01-27 19:26:32
+# Generated: 2026-01-27 23:37:07
 # Total Files: 46
 
 ================
@@ -803,10 +803,24 @@ namespace ProfRate.Data
                 .HasIndex(u => u.Username)
                 .IsUnique();
 
+            // Performance: Index for sorting and searching by name
+            modelBuilder.Entity<Student>()
+                .HasIndex(s => s.FirstName);
+            
+            modelBuilder.Entity<Student>()
+                .HasIndex(s => s.LastName);
+
             // Ensure Username is Unique for Lecturers
             modelBuilder.Entity<Lecturer>()
                 .HasIndex(u => u.Username)
                 .IsUnique();
+
+            // Performance: Index for sorting and searching by name
+            modelBuilder.Entity<Lecturer>()
+                .HasIndex(l => l.FirstName);
+            
+            modelBuilder.Entity<Lecturer>()
+                .HasIndex(l => l.LastName);
 
             // Admin -> Students (One-to-Many)
             modelBuilder.Entity<Student>()
@@ -1713,7 +1727,8 @@ namespace ProfRate.Services
             return await _context.Lecturers
                 .AsNoTracking()
                 .Where(l => l.Username.Contains(query) || 
-                            (l.FirstName + " " + l.LastName).Contains(query))
+                            l.FirstName.Contains(query) ||
+                            l.LastName.Contains(query))
                 .OrderBy(l => l.FirstName)
                 .Take(100)
                 .ToListAsync();
@@ -2055,7 +2070,8 @@ namespace ProfRate.Services
             return await _context.Students
                 .AsNoTracking()
                 .Where(s => s.Username.Contains(query) || 
-                            (s.FirstName + " " + s.LastName).Contains(query))
+                            s.FirstName.Contains(query) ||
+                            s.LastName.Contains(query))
                 .OrderBy(s => s.FirstName)
                 .Take(100)
                 .ToListAsync();
