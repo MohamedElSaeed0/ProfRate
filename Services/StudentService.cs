@@ -51,7 +51,8 @@ namespace ProfRate.Services
             return await _context.Students
                 .AsNoTracking()
                 .Where(s => s.Username.Contains(query) || 
-                            (s.FirstName + " " + s.LastName).Contains(query))
+                            s.FirstName.Contains(query) ||
+                            s.LastName.Contains(query))
                 .OrderBy(s => s.FirstName)
                 .Take(100)
                 .ToListAsync();

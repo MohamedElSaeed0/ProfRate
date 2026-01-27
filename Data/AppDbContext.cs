@@ -31,10 +31,24 @@ namespace ProfRate.Data
                 .HasIndex(u => u.Username)
                 .IsUnique();
 
+            // Performance: Index for sorting and searching by name
+            modelBuilder.Entity<Student>()
+                .HasIndex(s => s.FirstName);
+            
+            modelBuilder.Entity<Student>()
+                .HasIndex(s => s.LastName);
+
             // Ensure Username is Unique for Lecturers
             modelBuilder.Entity<Lecturer>()
                 .HasIndex(u => u.Username)
                 .IsUnique();
+
+            // Performance: Index for sorting and searching by name
+            modelBuilder.Entity<Lecturer>()
+                .HasIndex(l => l.FirstName);
+            
+            modelBuilder.Entity<Lecturer>()
+                .HasIndex(l => l.LastName);
 
             // Admin -> Students (One-to-Many)
             modelBuilder.Entity<Student>()
