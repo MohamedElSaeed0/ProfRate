@@ -1,5 +1,5 @@
 ﻿# ProfRate Full Code Context
-# Generated: 2026-01-27 14:50:40
+# Generated: 2026-01-27 19:26:32
 # Total Files: 46
 
 ================
@@ -1104,14 +1104,24 @@ namespace ProfRate.DTOs
 File: Admin.cs
 Path: Entities\Admin.cs
 ================
+using System.ComponentModel.DataAnnotations;
+
 namespace ProfRate.Entities
 {
     public class Admin
     {
         public int AdminId { get; set; }
+        
+        [MaxLength(50)]
         public string Username { get; set; } = string.Empty;
+        
+        [MaxLength(255)]
         public string Password { get; set; } = string.Empty;
+        
+        [MaxLength(50)]
         public string FirstName { get; set; } = string.Empty;
+        
+        [MaxLength(50)]
         public string LastName { get; set; } = string.Empty;
 
         // Navigation Properties
@@ -1770,6 +1780,11 @@ namespace ProfRate.Services
 
             if (lecturer.LecturerSubjects.Any())
                 _context.LecturerSubjects.RemoveRange(lecturer.LecturerSubjects);
+
+            // كمان لازم نمسح ارتباطه بالطلاب في المواد
+            var studentSubjects = await _context.StudentSubjects.Where(ss => ss.LecturerId == id).ToListAsync();
+            if (studentSubjects.Any())
+                _context.StudentSubjects.RemoveRange(studentSubjects);
 
             _context.Lecturers.Remove(lecturer);
             await _context.SaveChangesAsync();
@@ -2466,7 +2481,7 @@ app.UseDefaultFiles();
 app.UseStaticFiles();
 
 // HTTPS Redirection
-// app.UseHttpsRedirection();
+ app.UseHttpsRedirection();
 
 // CORS
 app.UseCors("AllowSpecificOrigins");

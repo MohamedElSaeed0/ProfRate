@@ -103,6 +103,11 @@ namespace ProfRate.Services
             if (lecturer.LecturerSubjects.Any())
                 _context.LecturerSubjects.RemoveRange(lecturer.LecturerSubjects);
 
+            // كمان لازم نمسح ارتباطه بالطلاب في المواد
+            var studentSubjects = await _context.StudentSubjects.Where(ss => ss.LecturerId == id).ToListAsync();
+            if (studentSubjects.Any())
+                _context.StudentSubjects.RemoveRange(studentSubjects);
+
             _context.Lecturers.Remove(lecturer);
             await _context.SaveChangesAsync();
             return true;

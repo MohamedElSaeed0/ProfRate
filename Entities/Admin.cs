@@ -1,11 +1,21 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace ProfRate.Entities
 {
     public class Admin
     {
         public int AdminId { get; set; }
+        
+        [MaxLength(50)]
         public string Username { get; set; } = string.Empty;
+        
+        [MaxLength(255)]
         public string Password { get; set; } = string.Empty;
+        
+        [MaxLength(50)]
         public string FirstName { get; set; } = string.Empty;
+        
+        [MaxLength(50)]
         public string LastName { get; set; } = string.Empty;
 
         // Navigation Properties
