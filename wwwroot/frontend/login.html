@@ -71,6 +71,7 @@
                 localStorage.setItem('userId', result.data.userId);
                 localStorage.setItem('firstName', result.data.firstName || '');
                 localStorage.setItem('fullName', result.data.fullName || result.data.firstName || '');
+                localStorage.setItem('gender', result.data.gender || 'Male');
 
                 // التوجيه للصفحة المناسبة
                 if (userType === 'Admin') {

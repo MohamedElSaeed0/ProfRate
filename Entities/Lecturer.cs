@@ -19,6 +19,9 @@ namespace ProfRate.Entities
         [MaxLength(100)]
         public string Password { get; set; } = string.Empty;
 
+        [MaxLength(10)]
+        public string Gender { get; set; } = "Male"; // Male or Female
+
         // Foreign Key
         public int AdminId { get; set; }
 

@@ -67,8 +67,10 @@
 
         // عرض اسم المستخدم
         const fullName = localStorage.getItem('fullName');
+        const gender = localStorage.getItem('gender');
         if (fullName && fullName !== 'null' && fullName !== 'undefined' && fullName !== '') {
-            document.querySelector('.page-title').textContent = 'مرحباً: ' + fullName;
+            const studentLabel = (gender === 'Female') ? 'طالبة' : 'طالب';
+            document.querySelector('.page-title').textContent = 'مرحباً ' + studentLabel + ': ' + fullName;
         }
 
         async function loadStats() {

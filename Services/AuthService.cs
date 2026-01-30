@@ -42,7 +42,8 @@ namespace ProfRate.Services
                         UserType = "Admin",
                         UserId = admin.AdminId,
                         FirstName = admin.FirstName,
-                        FullName = admin.FirstName + " " + admin.LastName
+                        FullName = admin.FirstName + " " + admin.LastName,
+                        Gender = admin.Gender
                     };
                 }
             }
@@ -63,7 +64,8 @@ namespace ProfRate.Services
                         UserType = "Student",
                         UserId = student.StudentId,
                         FirstName = student.FirstName,
-                        FullName = student.FirstName + " " + student.LastName
+                        FullName = student.FirstName + " " + student.LastName,
+                        Gender = student.Gender
                     };
                 }
             }
@@ -84,7 +86,8 @@ namespace ProfRate.Services
                         UserType = "Lecturer",
                         UserId = lecturer.LecturerId,
                         FirstName = lecturer.FirstName,
-                        FullName = lecturer.FirstName + " " + lecturer.LastName
+                        FullName = lecturer.FirstName + " " + lecturer.LastName,
+                        Gender = lecturer.Gender
                     };
                 }
             }

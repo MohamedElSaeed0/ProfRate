@@ -22,6 +22,9 @@ namespace ProfRate.DTOs
         [Required(ErrorMessage = "كلمة المرور مطلوبة")]
         [StringLength(100, MinimumLength = 6, ErrorMessage = "كلمة المرور يجب أن تكون 6 أحرف على الأقل")]
         public string Password { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "الجنس مطلوب")]
+        public string Gender { get; set; } = "Male"; // Male or Female
         
         public int AdminId { get; set; }
     }
@@ -45,6 +48,9 @@ namespace ProfRate.DTOs
         [Required(ErrorMessage = "كلمة المرور مطلوبة")]
         [MinLength(6, ErrorMessage = "كلمة المرور قصيرة جداً")]
         public string Password { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "الجنس مطلوب")]
+        public string Gender { get; set; } = "Male"; // Male or Female
         
         public int AdminId { get; set; }
     }
@@ -121,6 +127,7 @@ namespace ProfRate.DTOs
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string Username { get; set; } = string.Empty;
+        public string Gender { get; set; } = string.Empty;
         public int AdminId { get; set; }
     }
 
@@ -131,6 +138,7 @@ namespace ProfRate.DTOs
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string Username { get; set; } = string.Empty;
+        public string Gender { get; set; } = string.Empty;
         public int AdminId { get; set; }
     }
 }

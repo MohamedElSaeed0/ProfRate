@@ -60,6 +60,7 @@ namespace ProfRate.Services
                 LastName = dto.LastName,
                 Username = dto.Username,
                 Password = dto.Password, // Reverted to Plain Text
+                Gender = dto.Gender,
                 AdminId = dto.AdminId
             };
 
@@ -81,6 +82,7 @@ namespace ProfRate.Services
             lecturer.LastName = dto.LastName;
             lecturer.Username = dto.Username;
             lecturer.Password = dto.Password; // Reverted to Plain Text
+            lecturer.Gender = dto.Gender;
 
             await _context.SaveChangesAsync();
             return lecturer;

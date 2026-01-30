@@ -18,6 +18,9 @@ namespace ProfRate.Entities
         [MaxLength(50)]
         public string LastName { get; set; } = string.Empty;
 
+        [MaxLength(10)]
+        public string Gender { get; set; } = "Male"; // Male or Female
+
         // Navigation Properties
         public List<Student> Students { get; set; } = new List<Student>();
         public List<Lecturer> Lecturers { get; set; } = new List<Lecturer>();

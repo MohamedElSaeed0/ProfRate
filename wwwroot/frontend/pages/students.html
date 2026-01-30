@@ -295,6 +295,14 @@
                     <input type="password" class="form-control" id="password" required>
                 </div>
 
+                <div class="form-group">
+                    <label class="form-label">الجنس</label>
+                    <select class="form-control" id="gender" required>
+                        <option value="Male">ذكر</option>
+                        <option value="Female">أنثى</option>
+                    </select>
+                </div>
+
                 <button type="submit" class="btn btn-primary" style="width: 100%;">
                     <i class="fas fa-save"></i>
                     حفظ
@@ -464,6 +472,7 @@
                 lastName: document.getElementById('lastName').value.trim(),
                 username: document.getElementById('username').value.trim(),
                 password: document.getElementById('password').value,
+                gender: document.getElementById('gender').value,
                 adminId: parseInt(localStorage.getItem('userId')) || 1
             };
 
