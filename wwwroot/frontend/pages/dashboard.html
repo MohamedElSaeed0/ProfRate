@@ -129,10 +129,44 @@
         </main>
     </div>
 
+    <!-- Custom Confirm Modal -->
+    <div class="confirm-modal-overlay" id="confirmModal">
+        <div class="confirm-modal">
+            <div class="confirm-modal-icon warning">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3>تأكيد العملية</h3>
+            <p id="confirmMessage">هل أنت متأكد من هذا الإجراء؟</p>
+            <div class="confirm-modal-buttons">
+                <button class="btn btn-danger" id="confirmYes">نعم، تأكيد</button>
+                <button class="btn" id="confirmNo" style="background: #e2e8f0;">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
     <script src="../js/api.js"></script>
     <script>
         // التحقق من تسجيل الدخول
         checkAuth();
+
+        // ========== Custom Confirm Function ==========
+        function showConfirm(message) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('confirmModal');
+                document.getElementById('confirmMessage').textContent = message;
+                modal.classList.add('active');
+
+                document.getElementById('confirmYes').onclick = () => {
+                    modal.classList.remove('active');
+                    resolve(true);
+                };
+
+                document.getElementById('confirmNo').onclick = () => {
+                    modal.classList.remove('active');
+                    resolve(false);
+                };
+            });
+        }
 
         // عرض اسم المستخدم
         const fullName = localStorage.getItem('fullName');
@@ -194,7 +228,8 @@
 
         // بدء التحميل
         async function resetEvaluations() {
-            if (confirm('هل أنت متأكد من بدء دورة تقييم جديدة؟ سيتم أرشفة جميع التقييمات الحالية ولن تظهر في التقارير المباشرة.')) {
+            const confirmed = await showConfirm('هل أنت متأكد من بدء دورة تقييم جديدة؟ سيتم أرشفة جميع التقييمات الحالية ولن تظهر في التقارير المباشرة.');
+            if (confirmed) {
                 const result = await apiCall('/evaluations/Reset', 'POST');
                 if (result.success) {
                     showAlert(result.data.message);

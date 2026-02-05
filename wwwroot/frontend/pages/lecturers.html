@@ -319,9 +319,43 @@
         </div>
     </div>
 
+    <!-- Custom Confirm Modal -->
+    <div class="confirm-modal-overlay" id="confirmModal">
+        <div class="confirm-modal">
+            <div class="confirm-modal-icon danger">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3>تأكيد الحذف</h3>
+            <p id="confirmMessage">هل أنت متأكد من هذا الإجراء؟</p>
+            <div class="confirm-modal-buttons">
+                <button class="btn btn-danger" id="confirmYes">نعم، احذف</button>
+                <button class="btn" id="confirmNo" style="background: #e2e8f0;">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
     <script src="../js/api.js?v=2"></script>
     <script>
         checkAuth();
+
+        // ========== Custom Confirm Function ==========
+        function showConfirm(message) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('confirmModal');
+                document.getElementById('confirmMessage').textContent = message;
+                modal.classList.add('active');
+
+                document.getElementById('confirmYes').onclick = () => {
+                    modal.classList.remove('active');
+                    resolve(true);
+                };
+
+                document.getElementById('confirmNo').onclick = () => {
+                    modal.classList.remove('active');
+                    resolve(false);
+                };
+            });
+        }
 
         // ========== Tab Switching ==========
         function switchTab(tabName) {
@@ -401,7 +435,8 @@
         }
 
         async function deleteLecturer(id) {
-            if (confirm('هل أنت متأكد من حذف هذا المحاضر؟')) {
+            const confirmed = await showConfirm('هل أنت متأكد من حذف هذا المحاضر؟');
+            if (confirmed) {
                 const result = await LecturersAPI.delete(id);
                 if (result.success) {
                     showAlert('تم حذف المحاضر بنجاح');
@@ -519,7 +554,8 @@
         }
 
         async function deleteAssignment(id) {
-            if (confirm('هل أنت متأكد من حذف هذا التعيين؟')) {
+            const confirmed = await showConfirm('هل أنت متأكد من حذف هذا التعيين؟');
+            if (confirmed) {
                 await apiCall(`/lecturersubjects/Delete/${id}`, 'DELETE');
                 showAlert('تم حذف التعيين بنجاح');
                 loadAssignments();

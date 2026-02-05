@@ -96,51 +96,51 @@ builder.Services.AddRateLimiter(options =>
 
 var app = builder.Build();
 
-// ===== Database Seeding - إنشاء Admin افتراضي =====
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    
-    // إنشاء أو تحديث Admin افتراضي
-    var existingAdmin = context.Admins.FirstOrDefault(a => a.Username == "admin");
-    if (existingAdmin == null)
-    {
-        context.Admins.Add(new ProfRate.Entities.Admin
-        {
-            Username = "admin",
-            Password = "admin123",
-            FirstName = "System",
-            LastName = "Admin"
-        });
-        context.SaveChanges();
-        Console.WriteLine("✅ تم إنشاء Admin افتراضي: admin / admin123");
-    }
-    else
-    {
-        // تحديث البيانات لو ناقصة
-        bool updated = false;
-        if (existingAdmin.Password != "admin123")
-        {
-            existingAdmin.Password = "admin123";
-            updated = true;
-        }
-        if (string.IsNullOrEmpty(existingAdmin.FirstName))
-        {
-            existingAdmin.FirstName = "System";
-            updated = true;
-        }
-        if (string.IsNullOrEmpty(existingAdmin.LastName))
-        {
-            existingAdmin.LastName = "Admin";
-            updated = true;
-        }
-        if (updated)
-        {
-            context.SaveChanges();
-            Console.WriteLine("✅ تم تحديث Admin: admin / admin123");
-        }
-    }
-}
+// ===== Database Seeding - إنشاء Admin افتراضي (معطّل حالياً) =====
+// using (var scope = app.Services.CreateScope())
+// {
+//     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+//     
+//     // إنشاء أو تحديث Admin افتراضي
+//     var existingAdmin = context.Admins.FirstOrDefault(a => a.Username == "admin");
+//     if (existingAdmin == null)
+//     {
+//         context.Admins.Add(new ProfRate.Entities.Admin
+//         {
+//             Username = "admin",
+//             Password = "admin123",
+//             FirstName = "System",
+//             LastName = "Admin"
+//         });
+//         context.SaveChanges();
+//         Console.WriteLine("✅ تم إنشاء Admin افتراضي: admin / admin123");
+//     }
+//     else
+//     {
+//         // تحديث البيانات لو ناقصة
+//         bool updated = false;
+//         if (existingAdmin.Password != "admin123")
+//         {
+//             existingAdmin.Password = "admin123";
+//             updated = true;
+//         }
+//         if (string.IsNullOrEmpty(existingAdmin.FirstName))
+//         {
+//             existingAdmin.FirstName = "System";
+//             updated = true;
+//         }
+//         if (string.IsNullOrEmpty(existingAdmin.LastName))
+//         {
+//             existingAdmin.LastName = "Admin";
+//             updated = true;
+//         }
+//         if (updated)
+//         {
+//             context.SaveChanges();
+//             Console.WriteLine("✅ تم تحديث Admin: admin / admin123");
+//         }
+//     }
+// }
 
 // ===== Configure the HTTP request pipeline =====
 app.UseMiddleware<ProfRate.Middleware.ExceptionMiddleware>();
