@@ -17,9 +17,37 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
 
-// 2. إضافة الـ Swagger
+// 2. إضافة الـ Swagger with JWT Support
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "ProfRate API", Version = "v1" });
+    
+    // إضافة الـ JWT Authentication في Swagger
+    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Description = "أدخل الـ Token هنا. مثال: Bearer eyJhbGciOi...",
+        Name = "Authorization",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+    
+    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 // 3. إضافة الـ Database Connection
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -173,8 +201,8 @@ app.UseAuthorization();
 app.MapControllers();
 
 // Redirect root to frontend
-app.MapGet("/", () => Results.Redirect("/frontend/login.html"));
-app.MapGet("/login.html", () => Results.Redirect("/frontend/login.html"));
+//app.MapGet("/", () => Results.Redirect("/frontend/login.html"));
+//app.MapGet("/login.html", () => Results.Redirect("/frontend/login.html"));
 
 // تشغيل التطبيق
 app.Run();
