@@ -25,7 +25,7 @@ namespace ProfRate.Services
         public async Task<LoginResponseDTO> Login(LoginDTO loginDto)
         {
             // البحث عن المستخدم حسب نوعه
-            if (loginDto.UserType == "Admin")
+            if (loginDto.UserType.Equals("Admin", StringComparison.OrdinalIgnoreCase))
             {
                 var admin = await _context.Admins
                     .AsNoTracking()
@@ -47,7 +47,7 @@ namespace ProfRate.Services
                     };
                 }
             }
-            else if (loginDto.UserType == "Student")
+            else if (loginDto.UserType.Equals("Student", StringComparison.OrdinalIgnoreCase))
             {
                 var student = await _context.Students
                     .AsNoTracking()
@@ -69,7 +69,7 @@ namespace ProfRate.Services
                     };
                 }
             }
-            else if (loginDto.UserType == "Lecturer")
+            else if (loginDto.UserType.Equals("Lecturer", StringComparison.OrdinalIgnoreCase))
             {
                 var lecturer = await _context.Lecturers
                     .AsNoTracking()
