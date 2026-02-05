@@ -6,7 +6,7 @@ using ProfRate.Entities;
 namespace ProfRate.Services
 {
     // Service للـ Questions - إدارة الأسئلة
-    public class QuestionService
+    public class QuestionService : IQuestionService
     {
         private readonly AppDbContext _context;
 

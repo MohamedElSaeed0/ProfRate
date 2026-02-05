@@ -6,7 +6,7 @@ using ProfRate.Entities;
 namespace ProfRate.Services
 {
     // Service للـ Lecturers - إدارة المحاضرين
-    public class LecturerService
+    public class LecturerService : ILecturerService
     {
         private readonly AppDbContext _context;
 
@@ -26,7 +26,7 @@ namespace ProfRate.Services
         {
             if (string.IsNullOrWhiteSpace(query))
                 return new List<Lecturer>();
-            
+
             // Sanitize Input
             query = query.Trim();
             if (query.Length > 100) query = query.Substring(0, 100);
@@ -34,7 +34,7 @@ namespace ProfRate.Services
 
             return await _context.Lecturers
                 .AsNoTracking()
-                .Where(l => l.Username.Contains(query) || 
+                .Where(l => l.Username.Contains(query) ||
                             l.FirstName.Contains(query) ||
                             l.LastName.Contains(query))
                 .OrderBy(l => l.FirstName)

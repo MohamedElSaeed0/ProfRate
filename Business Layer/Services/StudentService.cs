@@ -6,7 +6,7 @@ using ProfRate.Entities;
 namespace ProfRate.Services
 {
     // Service للـ Students - إدارة الطلاب
-    public class StudentService
+    public class StudentService : IStudentService
     {
         private readonly AppDbContext _context;
 
@@ -50,7 +50,7 @@ namespace ProfRate.Services
 
             return await _context.Students
                 .AsNoTracking()
-                .Where(s => s.Username.Contains(query) || 
+                .Where(s => s.Username.Contains(query) ||
                             s.FirstName.Contains(query) ||
                             s.LastName.Contains(query))
                 .OrderBy(s => s.FirstName)

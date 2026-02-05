@@ -9,9 +9,9 @@ namespace ProfRate.Controllers
     [ApiController]
     public class SubjectController : ControllerBase
     {
-        private readonly SubjectService _subjectService;
+        private readonly ISubjectService _subjectService;
 
-        public SubjectController(SubjectService subjectService)
+        public SubjectController(ISubjectService subjectService)
         {
             _subjectService = subjectService;
         }

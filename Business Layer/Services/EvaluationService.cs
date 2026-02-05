@@ -6,7 +6,7 @@ using ProfRate.Entities;
 namespace ProfRate.Services
 {
     // Service للـ Evaluations - إدارة التقييمات
-    public class EvaluationService
+    public class EvaluationService : IEvaluationService
     {
         private readonly AppDbContext _context;
 
@@ -25,9 +25,9 @@ namespace ProfRate.Services
 
             // التحقق هل قام الطالب بتقييم هذا السؤال لنفس الدكتور والمادة من قبل في الدورة الحالية؟
             var exists = await _context.Evaluations
-                .AnyAsync(e => e.StudentId == dto.StudentId && 
-                               e.LecturerId == dto.LecturerId && 
-                               e.SubjectId == dto.SubjectId && 
+                .AnyAsync(e => e.StudentId == dto.StudentId &&
+                               e.LecturerId == dto.LecturerId &&
+                               e.SubjectId == dto.SubjectId &&
                                e.QuestionId == dto.QuestionId &&
                                !e.IsArchived);
 
@@ -79,11 +79,12 @@ namespace ProfRate.Services
                 .Include(e => e.Lecturer)
                 .Include(e => e.Subject)
                 .Where(e => e.LecturerId == lecturerId && !e.IsArchived)
-                .GroupBy(e => new { 
-                    e.StudentId, 
+                .GroupBy(e => new
+                {
+                    e.StudentId,
                     // No need for Student details here as it should be anonymous
-                    e.SubjectId, 
-                    SubjectName = e.Subject.SubjectName 
+                    e.SubjectId,
+                    SubjectName = e.Subject.SubjectName
                 })
                 .Select(g => new EvaluationResponseDTO
                 {
@@ -125,15 +126,16 @@ namespace ProfRate.Services
                 .Include(e => e.Lecturer)
                 .Include(e => e.Subject)
                 .Where(e => !e.IsArchived)
-                .GroupBy(e => new { 
-                    e.StudentId, 
-                    StudentFirstName = e.Student.FirstName, 
+                .GroupBy(e => new
+                {
+                    e.StudentId,
+                    StudentFirstName = e.Student.FirstName,
                     StudentLastName = e.Student.LastName,
-                    e.LecturerId, 
-                    LecturerFirstName = e.Lecturer.FirstName, 
+                    e.LecturerId,
+                    LecturerFirstName = e.Lecturer.FirstName,
                     LecturerLastName = e.Lecturer.LastName,
-                    e.SubjectId, 
-                    SubjectName = e.Subject.SubjectName 
+                    e.SubjectId,
+                    SubjectName = e.Subject.SubjectName
                 })
                 .Select(g => new EvaluationResponseDTO
                 {

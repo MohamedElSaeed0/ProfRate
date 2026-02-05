@@ -6,7 +6,7 @@ using ProfRate.Entities;
 namespace ProfRate.Services
 {
     // Service للـ LecturerSubjects - إدارة ربط المحاضرين بالمواد
-    public class LecturerSubjectService
+    public class LecturerSubjectService : ILecturerSubjectService
     {
         private readonly AppDbContext _context;
 
@@ -34,7 +34,7 @@ namespace ProfRate.Services
         }
 
         // الحصول على محاضرين مادة معينة
-        public async Task<List<LecturerSubject >> GetBySubject(int subjectId)
+        public async Task<List<LecturerSubject>> GetBySubject(int subjectId)
         {
             return await _context.LecturerSubjects
                 .Where(ls => ls.SubjectId == subjectId)
@@ -47,7 +47,7 @@ namespace ProfRate.Services
         {
             var exists = await _context.LecturerSubjects
                 .AnyAsync(ls => ls.LecturerId == dto.LecturerId && ls.SubjectId == dto.SubjectId);
-            
+
             if (exists)
             {
                 return (false, "هذا المحاضر معين بالفعل لهذه المادة");

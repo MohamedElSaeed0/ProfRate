@@ -1,0 +1,15 @@
+﻿using ProfRate.DTOs;
+using ProfRate.Entities;
+
+namespace ProfRate.Services
+{
+    public interface ILecturerService
+    {
+        Task<Lecturer> AddLecturer(LecturerDTO dto);
+        Task<bool> DeleteLecturer(int id);
+        Task<List<Lecturer>> GetAllLecturers();
+        Task<Lecturer?> GetLecturerById(int id);
+        Task<List<Lecturer>> Search(string query);
+        Task<Lecturer?> UpdateLecturer(int id, LecturerDTO dto);
+    }
+}

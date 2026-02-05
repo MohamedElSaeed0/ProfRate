@@ -54,14 +54,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // 4. إضافة الـ Services (Dependency Injection)
-builder.Services.AddScoped<AuthService>();
-builder.Services.AddScoped<StudentService>();
-builder.Services.AddScoped<LecturerService>();
-builder.Services.AddScoped<EvaluationService>();
-builder.Services.AddScoped<QuestionService>();
-builder.Services.AddScoped<SubjectService>();
-builder.Services.AddScoped<StudentSubjectService>();
-builder.Services.AddScoped<LecturerSubjectService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IStudentService,StudentService>();
+builder.Services.AddScoped<ILecturerService, LecturerService>();
+builder.Services.AddScoped<IEvaluationService, EvaluationService>();
+builder.Services.AddScoped<IQuestionService, QuestionService>();
+builder.Services.AddScoped<ISubjectService, SubjectService>();
+builder.Services.AddScoped<IStudentSubjectService, StudentSubjectService>();
+builder.Services.AddScoped<ILecturerSubjectService, LecturerSubjectService>();
 
 // 5. إضافة الـ JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

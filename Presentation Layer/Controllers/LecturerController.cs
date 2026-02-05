@@ -9,9 +9,9 @@ namespace ProfRate.Controllers
     [ApiController]
     public class LecturerController : ControllerBase
     {
-        private readonly LecturerService _lecturerService;
+        private readonly ILecturerService _lecturerService;
 
-        public LecturerController(LecturerService lecturerService)
+        public LecturerController(ILecturerService lecturerService)
         {
             _lecturerService = lecturerService;
         }

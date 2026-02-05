@@ -1,4 +1,153 @@
-﻿=== FILE: C:\PS\ProfRate\Business Layer\Services\AuthService.cs ===
+﻿=== FILE: C:\PS\ProfRate\Business Layer\Services\IServices\IAuthService.cs ===
+
+using ProfRate.DTOs;
+
+namespace ProfRate.Services
+{
+    public interface IAuthService
+    {
+        Task<LoginResponseDTO> Login(LoginDTO loginDto);
+    }
+}
+
+
+
+=== FILE: C:\PS\ProfRate\Business Layer\Services\IServices\IEvaluationService.cs ===
+
+using ProfRate.DTOs;
+using ProfRate.Entities;
+
+namespace ProfRate.Services
+{
+    public interface IEvaluationService
+    {
+        Task<Evaluation> AddEvaluation(EvaluationDTO dto);
+        Task<List<EvaluationResponseDTO>> GetAllEvaluations();
+        Task<List<EvaluationReportDTO>> GetEvaluationReport();
+        Task<List<EvaluationResponseDTO>> GetEvaluationsByLecturer(int lecturerId);
+        Task<bool> ResetEvaluations();
+    }
+}
+
+
+
+=== FILE: C:\PS\ProfRate\Business Layer\Services\IServices\ILecturerService.cs ===
+
+using ProfRate.DTOs;
+using ProfRate.Entities;
+
+namespace ProfRate.Services
+{
+    public interface ILecturerService
+    {
+        Task<Lecturer> AddLecturer(LecturerDTO dto);
+        Task<bool> DeleteLecturer(int id);
+        Task<List<Lecturer>> GetAllLecturers();
+        Task<Lecturer?> GetLecturerById(int id);
+        Task<List<Lecturer>> Search(string query);
+        Task<Lecturer?> UpdateLecturer(int id, LecturerDTO dto);
+    }
+}
+
+
+
+=== FILE: C:\PS\ProfRate\Business Layer\Services\IServices\ILecturerSubjectService.cs ===
+
+using ProfRate.DTOs;
+using ProfRate.Entities;
+
+namespace ProfRate.Services
+{
+    public interface ILecturerSubjectService
+    {
+        Task<(bool Success, string Message)> AddLecturerSubject(LecturerSubjectDTO dto);
+        Task<bool> DeleteLecturerSubject(int id);
+        Task<List<LecturerSubject>> GetAll();
+        Task<List<LecturerSubject>> GetByLecturer(int lecturerId);
+        Task<List<LecturerSubject>> GetBySubject(int subjectId);
+        Task<(bool Success, string Message)> UpdateLecturerSubject(int id, LecturerSubjectDTO dto);
+    }
+}
+
+
+
+=== FILE: C:\PS\ProfRate\Business Layer\Services\IServices\IQuestionService.cs ===
+
+using ProfRate.DTOs;
+using ProfRate.Entities;
+
+namespace ProfRate.Services
+{
+    public interface IQuestionService
+    {
+        Task<Question> AddQuestion(QuestionDTO dto);
+        Task<bool> DeleteQuestion(int id);
+        Task<List<Question>> GetAllQuestions();
+        Task<Question?> GetQuestionById(int id);
+        Task<Question?> UpdateQuestion(int id, QuestionDTO dto);
+    }
+}
+
+
+
+=== FILE: C:\PS\ProfRate\Business Layer\Services\IServices\IStudentService.cs ===
+
+using ProfRate.DTOs;
+using ProfRate.Entities;
+
+namespace ProfRate.Services
+{
+    public interface IStudentService
+    {
+        Task<Student> AddStudent(StudentDTO dto);
+        Task<bool> DeleteStudent(int id);
+        Task<PagedResult<Student>> GetAllStudents(int page = 1, int pageSize = 20);
+        Task<Student?> GetStudentById(int id);
+        Task<List<Student>> Search(string query);
+        Task<Student?> UpdateStudent(int id, StudentDTO dto);
+    }
+}
+
+
+
+=== FILE: C:\PS\ProfRate\Business Layer\Services\IServices\IStudentSubjectService.cs ===
+
+using ProfRate.DTOs;
+using ProfRate.Entities;
+
+namespace ProfRate.Services
+{
+    public interface IStudentSubjectService
+    {
+        Task<(bool Success, string Message)> AddStudentSubject(StudentSubjectDTO dto);
+        Task<bool> DeleteStudentSubject(int id);
+        Task<List<StudentSubject>> GetAll();
+        Task<List<StudentSubject>> GetByStudent(int studentId);
+        Task<(bool Success, string Message)> UpdateStudentSubject(int id, StudentSubjectDTO dto);
+    }
+}
+
+
+
+=== FILE: C:\PS\ProfRate\Business Layer\Services\IServices\ISubjectService.cs ===
+
+using ProfRate.DTOs;
+using ProfRate.Entities;
+
+namespace ProfRate.Services
+{
+    public interface ISubjectService
+    {
+        Task<Subject?> AddSubject(SubjectDTO dto);
+        Task<bool> DeleteSubject(int id);
+        Task<List<Subject>> GetAllSubjects();
+        Task<Subject?> GetSubjectById(int id);
+    }
+}
+
+
+
+=== FILE: C:\PS\ProfRate\Business Layer\Services\AuthService.cs ===
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -12,7 +161,7 @@ using System.Text;
 namespace ProfRate.Services
 {
     // Service Ù„Ù„Ù€ Authentication - ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„ ÙˆØ¥Ù†Ø´Ø§Ø¡ Ø§Ù„Ù€ Token
-    public class AuthService
+    public class AuthService : IAuthService
     {
         private readonly AppDbContext _context;
         private readonly IConfiguration _configuration;
@@ -145,7 +294,7 @@ using ProfRate.Entities;
 namespace ProfRate.Services
 {
     // Service Ù„Ù„Ù€ Evaluations - Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„ØªÙ‚ÙŠÙŠÙ…Ø§Øª
-    public class EvaluationService
+    public class EvaluationService : IEvaluationService
     {
         private readonly AppDbContext _context;
 
@@ -164,9 +313,9 @@ namespace ProfRate.Services
 
             // Ø§Ù„ØªØ­Ù‚Ù‚ Ù‡Ù„ Ù‚Ø§Ù… Ø§Ù„Ø·Ø§Ù„Ø¨ Ø¨ØªÙ‚ÙŠÙŠÙ… Ù‡Ø°Ø§ Ø§Ù„Ø³Ø¤Ø§Ù„ Ù„Ù†ÙØ³ Ø§Ù„Ø¯ÙƒØªÙˆØ± ÙˆØ§Ù„Ù…Ø§Ø¯Ø© Ù…Ù† Ù‚Ø¨Ù„ ÙÙŠ Ø§Ù„Ø¯ÙˆØ±Ø© Ø§Ù„Ø­Ø§Ù„ÙŠØ©ØŸ
             var exists = await _context.Evaluations
-                .AnyAsync(e => e.StudentId == dto.StudentId && 
-                               e.LecturerId == dto.LecturerId && 
-                               e.SubjectId == dto.SubjectId && 
+                .AnyAsync(e => e.StudentId == dto.StudentId &&
+                               e.LecturerId == dto.LecturerId &&
+                               e.SubjectId == dto.SubjectId &&
                                e.QuestionId == dto.QuestionId &&
                                !e.IsArchived);
 
@@ -218,11 +367,12 @@ namespace ProfRate.Services
                 .Include(e => e.Lecturer)
                 .Include(e => e.Subject)
                 .Where(e => e.LecturerId == lecturerId && !e.IsArchived)
-                .GroupBy(e => new { 
-                    e.StudentId, 
+                .GroupBy(e => new
+                {
+                    e.StudentId,
                     // No need for Student details here as it should be anonymous
-                    e.SubjectId, 
-                    SubjectName = e.Subject.SubjectName 
+                    e.SubjectId,
+                    SubjectName = e.Subject.SubjectName
                 })
                 .Select(g => new EvaluationResponseDTO
                 {
@@ -264,15 +414,16 @@ namespace ProfRate.Services
                 .Include(e => e.Lecturer)
                 .Include(e => e.Subject)
                 .Where(e => !e.IsArchived)
-                .GroupBy(e => new { 
-                    e.StudentId, 
-                    StudentFirstName = e.Student.FirstName, 
+                .GroupBy(e => new
+                {
+                    e.StudentId,
+                    StudentFirstName = e.Student.FirstName,
                     StudentLastName = e.Student.LastName,
-                    e.LecturerId, 
-                    LecturerFirstName = e.Lecturer.FirstName, 
+                    e.LecturerId,
+                    LecturerFirstName = e.Lecturer.FirstName,
                     LecturerLastName = e.Lecturer.LastName,
-                    e.SubjectId, 
-                    SubjectName = e.Subject.SubjectName 
+                    e.SubjectId,
+                    SubjectName = e.Subject.SubjectName
                 })
                 .Select(g => new EvaluationResponseDTO
                 {
@@ -302,7 +453,7 @@ using ProfRate.Entities;
 namespace ProfRate.Services
 {
     // Service Ù„Ù„Ù€ Lecturers - Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…Ø­Ø§Ø¶Ø±ÙŠÙ†
-    public class LecturerService
+    public class LecturerService : ILecturerService
     {
         private readonly AppDbContext _context;
 
@@ -322,7 +473,7 @@ namespace ProfRate.Services
         {
             if (string.IsNullOrWhiteSpace(query))
                 return new List<Lecturer>();
-            
+
             // Sanitize Input
             query = query.Trim();
             if (query.Length > 100) query = query.Substring(0, 100);
@@ -330,7 +481,7 @@ namespace ProfRate.Services
 
             return await _context.Lecturers
                 .AsNoTracking()
-                .Where(l => l.Username.Contains(query) || 
+                .Where(l => l.Username.Contains(query) ||
                             l.FirstName.Contains(query) ||
                             l.LastName.Contains(query))
                 .OrderBy(l => l.FirstName)
@@ -427,7 +578,7 @@ using ProfRate.Entities;
 namespace ProfRate.Services
 {
     // Service Ù„Ù„Ù€ LecturerSubjects - Ø¥Ø¯Ø§Ø±Ø© Ø±Ø¨Ø· Ø§Ù„Ù…Ø­Ø§Ø¶Ø±ÙŠÙ† Ø¨Ø§Ù„Ù…ÙˆØ§Ø¯
-    public class LecturerSubjectService
+    public class LecturerSubjectService : ILecturerSubjectService
     {
         private readonly AppDbContext _context;
 
@@ -455,7 +606,7 @@ namespace ProfRate.Services
         }
 
         // Ø§Ù„Ø­ØµÙˆÙ„ Ø¹Ù„Ù‰ Ù…Ø­Ø§Ø¶Ø±ÙŠÙ† Ù…Ø§Ø¯Ø© Ù…Ø¹ÙŠÙ†Ø©
-        public async Task<List<LecturerSubject >> GetBySubject(int subjectId)
+        public async Task<List<LecturerSubject>> GetBySubject(int subjectId)
         {
             return await _context.LecturerSubjects
                 .Where(ls => ls.SubjectId == subjectId)
@@ -468,7 +619,7 @@ namespace ProfRate.Services
         {
             var exists = await _context.LecturerSubjects
                 .AnyAsync(ls => ls.LecturerId == dto.LecturerId && ls.SubjectId == dto.SubjectId);
-            
+
             if (exists)
             {
                 return (false, "Ù‡Ø°Ø§ Ø§Ù„Ù…Ø­Ø§Ø¶Ø± Ù…Ø¹ÙŠÙ† Ø¨Ø§Ù„ÙØ¹Ù„ Ù„Ù‡Ø°Ù‡ Ø§Ù„Ù…Ø§Ø¯Ø©");
@@ -551,7 +702,7 @@ using ProfRate.Entities;
 namespace ProfRate.Services
 {
     // Service Ù„Ù„Ù€ Questions - Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ø£Ø³Ø¦Ù„Ø©
-    public class QuestionService
+    public class QuestionService : IQuestionService
     {
         private readonly AppDbContext _context;
 
@@ -631,7 +782,7 @@ using ProfRate.Entities;
 namespace ProfRate.Services
 {
     // Service Ù„Ù„Ù€ Students - Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ø·Ù„Ø§Ø¨
-    public class StudentService
+    public class StudentService : IStudentService
     {
         private readonly AppDbContext _context;
 
@@ -675,7 +826,7 @@ namespace ProfRate.Services
 
             return await _context.Students
                 .AsNoTracking()
-                .Where(s => s.Username.Contains(query) || 
+                .Where(s => s.Username.Contains(query) ||
                             s.FirstName.Contains(query) ||
                             s.LastName.Contains(query))
                 .OrderBy(s => s.FirstName)
@@ -764,7 +915,7 @@ using ProfRate.Entities;
 namespace ProfRate.Services
 {
     // Service Ù„Ù„Ù€ StudentSubjects - Ø¥Ø¯Ø§Ø±Ø© Ø±Ø¨Ø· Ø§Ù„Ø·Ù„Ø§Ø¨ Ø¨Ø§Ù„Ù…ÙˆØ§Ø¯
-    public class StudentSubjectService
+    public class StudentSubjectService : IStudentSubjectService
     {
         private readonly AppDbContext _context;
 
@@ -866,7 +1017,7 @@ using ProfRate.Entities;
 namespace ProfRate.Services
 {
     // Service Ù„Ù„Ù€ Subjects - Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…ÙˆØ§Ø¯
-    public class SubjectService
+    public class SubjectService : ISubjectService
     {
         private readonly AppDbContext _context;
 
@@ -894,7 +1045,7 @@ namespace ProfRate.Services
             var existingSubject = await _context.Subjects
                 .AsNoTracking()
                 .FirstOrDefaultAsync(s => s.SubjectName.ToLower() == dto.SubjectName.ToLower());
-            
+
             if (existingSubject != null)
             {
                 return null; // Ø§Ù„Ù…Ø§Ø¯Ø© Ù…ÙˆØ¬ÙˆØ¯Ø© Ù…Ø³Ø¨Ù‚Ø§Ù‹
@@ -1331,9 +1482,9 @@ namespace ProfRate.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly AuthService _authService;
+        private readonly IAuthService _authService;
 
-        public AuthController(AuthService authService)
+        public AuthController(IAuthService authService)
         {
             _authService = authService;
         }
@@ -1373,9 +1524,9 @@ namespace ProfRate.Controllers
     [ApiController]
     public class EvaluationController : ControllerBase
     {
-        private readonly EvaluationService _evaluationService;
+        private readonly IEvaluationService _evaluationService;
 
-        public EvaluationController(EvaluationService evaluationService)
+        public EvaluationController(IEvaluationService evaluationService)
         {
             _evaluationService = evaluationService;
         }
@@ -1457,9 +1608,9 @@ namespace ProfRate.Controllers
     [ApiController]
     public class LecturerController : ControllerBase
     {
-        private readonly LecturerService _lecturerService;
+        private readonly ILecturerService _lecturerService;
 
-        public LecturerController(LecturerService lecturerService)
+        public LecturerController(ILecturerService lecturerService)
         {
             _lecturerService = lecturerService;
         }
@@ -1582,16 +1733,16 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProfRate.Data;
 using ProfRate.Entities;
-
+using ProfRate.Services;
 namespace ProfRate.Controllers
 {
     [Route("api/lecturersubjects")]
     [ApiController]
     public class LecturerSubjectController : ControllerBase
     {
-        private readonly ProfRate.Services.LecturerSubjectService _service;
+        private readonly ILecturerSubjectService _service;
 
-        public LecturerSubjectController(ProfRate.Services.LecturerSubjectService service)
+        public LecturerSubjectController(ILecturerSubjectService service)
         {
             _service = service;
         }
@@ -1687,9 +1838,9 @@ namespace ProfRate.Controllers
     [ApiController]
     public class QuestionController : ControllerBase
     {
-        private readonly QuestionService _questionService;
+        private readonly IQuestionService _questionService;
 
-        public QuestionController(QuestionService questionService)
+        public QuestionController(IQuestionService questionService)
         {
             _questionService = questionService;
         }
@@ -1780,9 +1931,9 @@ namespace ProfRate.Controllers
     [ApiController]
     public class StudentController : ControllerBase
     {
-        private readonly StudentService _studentService;
+        private readonly IStudentService _studentService;
 
-        public StudentController(StudentService studentService)
+        public StudentController(IStudentService studentService)
         {
             _studentService = studentService;
         }
@@ -1917,16 +2068,16 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProfRate.Data;
 using ProfRate.Entities;
-
+using ProfRate.Services;
 namespace ProfRate.Controllers
 {
     [Route("api/studentsubjects")]
     [ApiController]
     public class StudentSubjectController : ControllerBase
     {
-        private readonly ProfRate.Services.StudentSubjectService _service;
+        private readonly IStudentSubjectService _service;
 
-        public StudentSubjectController(ProfRate.Services.StudentSubjectService service)
+        public StudentSubjectController(IStudentSubjectService service)
         {
             _service = service;
         }
@@ -2012,9 +2163,9 @@ namespace ProfRate.Controllers
     [ApiController]
     public class SubjectController : ControllerBase
     {
-        private readonly SubjectService _subjectService;
+        private readonly ISubjectService _subjectService;
 
-        public SubjectController(SubjectService subjectService)
+        public SubjectController(ISubjectService subjectService)
         {
             _subjectService = subjectService;
         }
@@ -6076,14 +6227,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // 4. Ø¥Ø¶Ø§ÙØ© Ø§Ù„Ù€ Services (Dependency Injection)
-builder.Services.AddScoped<AuthService>();
-builder.Services.AddScoped<StudentService>();
-builder.Services.AddScoped<LecturerService>();
-builder.Services.AddScoped<EvaluationService>();
-builder.Services.AddScoped<QuestionService>();
-builder.Services.AddScoped<SubjectService>();
-builder.Services.AddScoped<StudentSubjectService>();
-builder.Services.AddScoped<LecturerSubjectService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IStudentService,StudentService>();
+builder.Services.AddScoped<ILecturerService, LecturerService>();
+builder.Services.AddScoped<IEvaluationService, EvaluationService>();
+builder.Services.AddScoped<IQuestionService, QuestionService>();
+builder.Services.AddScoped<ISubjectService, SubjectService>();
+builder.Services.AddScoped<IStudentSubjectService, StudentSubjectService>();
+builder.Services.AddScoped<ILecturerSubjectService, LecturerSubjectService>();
 
 // 5. Ø¥Ø¶Ø§ÙØ© Ø§Ù„Ù€ JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

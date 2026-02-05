@@ -10,7 +10,7 @@ using System.Text;
 namespace ProfRate.Services
 {
     // Service للـ Authentication - تسجيل الدخول وإنشاء الـ Token
-    public class AuthService
+    public class AuthService : IAuthService
     {
         private readonly AppDbContext _context;
         private readonly IConfiguration _configuration;

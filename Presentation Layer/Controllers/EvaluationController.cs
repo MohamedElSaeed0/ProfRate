@@ -9,9 +9,9 @@ namespace ProfRate.Controllers
     [ApiController]
     public class EvaluationController : ControllerBase
     {
-        private readonly EvaluationService _evaluationService;
+        private readonly IEvaluationService _evaluationService;
 
-        public EvaluationController(EvaluationService evaluationService)
+        public EvaluationController(IEvaluationService evaluationService)
         {
             _evaluationService = evaluationService;
         }

@@ -6,7 +6,7 @@ using ProfRate.Entities;
 namespace ProfRate.Services
 {
     // Service للـ Subjects - إدارة المواد
-    public class SubjectService
+    public class SubjectService : ISubjectService
     {
         private readonly AppDbContext _context;
 
@@ -34,7 +34,7 @@ namespace ProfRate.Services
             var existingSubject = await _context.Subjects
                 .AsNoTracking()
                 .FirstOrDefaultAsync(s => s.SubjectName.ToLower() == dto.SubjectName.ToLower());
-            
+
             if (existingSubject != null)
             {
                 return null; // المادة موجودة مسبقاً

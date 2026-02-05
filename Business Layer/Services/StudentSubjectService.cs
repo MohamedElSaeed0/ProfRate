@@ -6,7 +6,7 @@ using ProfRate.Entities;
 namespace ProfRate.Services
 {
     // Service للـ StudentSubjects - إدارة ربط الطلاب بالمواد
-    public class StudentSubjectService
+    public class StudentSubjectService : IStudentSubjectService
     {
         private readonly AppDbContext _context;
 

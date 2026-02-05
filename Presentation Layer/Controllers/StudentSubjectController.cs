@@ -3,16 +3,16 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProfRate.Data;
 using ProfRate.Entities;
-
+using ProfRate.Services;
 namespace ProfRate.Controllers
 {
     [Route("api/studentsubjects")]
     [ApiController]
     public class StudentSubjectController : ControllerBase
     {
-        private readonly ProfRate.Services.StudentSubjectService _service;
+        private readonly IStudentSubjectService _service;
 
-        public StudentSubjectController(ProfRate.Services.StudentSubjectService service)
+        public StudentSubjectController(IStudentSubjectService service)
         {
             _service = service;
         }
