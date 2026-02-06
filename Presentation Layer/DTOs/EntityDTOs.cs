@@ -24,7 +24,7 @@ namespace ProfRate.DTOs
         public string Password { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "الجنس مطلوب")]
-        public string Gender { get; set; } = "Male"; // Male or Female
+        public string Gender { get; set; } = "Male";
         
         public int AdminId { get; set; }
     }
@@ -102,7 +102,6 @@ namespace ProfRate.DTOs
         public double AverageRating { get; set; }
         public int TotalEvaluations { get; set; }
     }
-
     public class StudentSubjectDTO
     {
         [Required]

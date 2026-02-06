@@ -1580,7 +1580,7 @@ namespace ProfRate.Controllers
         }
 
         // POST: api/evaluations/Reset
-        // Ø¥Ø¹Ø§Ø¯Ø© Ø¶Ø¨Ø· Ø§Ù„ØªÙ‚ÙŠÙŠÙ…Ø§Øª (Ù„Ù„Ø£Ø¯Ù…Ù† ÙÙ‚Ø·)
+        // Ø¥Ø¹Ø§Ø¯Ø© Ø¶Ø¨Ø· Ø§Ù„ØªÙ‚ÙŠÙŠÙ…Ø§Øª Ù„Ù„Ø£Ø¯Ù…Ù† ÙÙ‚Ø·
         [HttpPost]
         [Route("Reset")]
         [Authorize(Roles = "Admin")] // ØªÙØ¹ÙŠÙ„ Ø§Ù„ØµÙ„Ø§Ø­ÙŠØ© Ù„Ù„Ø£Ø¯Ù…Ù† ÙÙ‚Ø·
@@ -2291,7 +2291,7 @@ namespace ProfRate.DTOs
         public string Password { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Ø§Ù„Ø¬Ù†Ø³ Ù…Ø·Ù„ÙˆØ¨")]
-        public string Gender { get; set; } = "Male"; // Male or Female
+        public string Gender { get; set; } = "Male";
         
         public int AdminId { get; set; }
     }
@@ -2369,7 +2369,6 @@ namespace ProfRate.DTOs
         public double AverageRating { get; set; }
         public int TotalEvaluations { get; set; }
     }
-
     public class StudentSubjectDTO
     {
         [Required]
@@ -2424,7 +2423,7 @@ namespace ProfRate.DTOs
         public bool IsArchived { get; set; }
         
         public string StudentName { get; set; } = "";
-        public string ParticpantName { get; set; } = ""; // Student Name but generic? No, let's use StudentName
+        public string ParticpantName { get; set; } = ""; 
         public string QuestionText { get; set; } = "";
         public string LecturerName { get; set; } = "";
         public string SubjectName { get; set; } = "";
@@ -3074,7 +3073,7 @@ async function apiCall(endpoint, method = 'GET', data = null) {
         console.error('API Network Error:', error);
 
         if (error.message === 'Failed to fetch') {
-            return { success: false, data: { message: 'Ù„Ø§ ÙŠÙ…ÙƒÙ† Ø§Ù„Ø§ØªØµØ§Ù„ Ø¨Ø§Ù„Ø³ÙŠØ±ÙØ±ØŒ ØªØ£ÙƒØ¯ Ù…Ù† ØªØ´ØºÙŠÙ„ Ø§Ù„Ø¨Ø§Ùƒ Ø¥Ù†Ø¯' } };
+            return { success: false, data: { message: 'Ù„Ø§ ÙŠÙ…ÙƒÙ† Ø§Ù„Ø§ØªØµØ§Ù„ Ø¨Ø§Ù„Ø³ÙŠØ±ÙØ±' } };
         }
         return { success: false, data: { message: error.message || 'Ø­Ø¯Ø« Ø®Ø·Ø£ ØºÙŠØ± Ù…ØªÙˆÙ‚Ø¹' } };
     }

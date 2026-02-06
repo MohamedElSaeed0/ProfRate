@@ -55,7 +55,7 @@ async function apiCall(endpoint, method = 'GET', data = null) {
         console.error('API Network Error:', error);
 
         if (error.message === 'Failed to fetch') {
-            return { success: false, data: { message: 'لا يمكن الاتصال بالسيرفر، تأكد من تشغيل الباك إند' } };
+            return { success: false, data: { message: 'لا يمكن الاتصال بالسيرفر' } };
         }
         return { success: false, data: { message: error.message || 'حدث خطأ غير متوقع' } };
     }

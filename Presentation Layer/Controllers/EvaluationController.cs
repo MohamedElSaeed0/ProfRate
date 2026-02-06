@@ -65,7 +65,7 @@ namespace ProfRate.Controllers
         }
 
         // POST: api/evaluations/Reset
-        // إعادة ضبط التقييمات (للأدمن فقط)
+        // إعادة ضبط التقييمات للأدمن فقط
         [HttpPost]
         [Route("Reset")]
         [Authorize(Roles = "Admin")] // تفعيل الصلاحية للأدمن فقط
