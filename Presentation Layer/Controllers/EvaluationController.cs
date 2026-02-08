@@ -10,10 +10,12 @@ namespace ProfRate.Controllers
     public class EvaluationController : ControllerBase
     {
         private readonly IEvaluationService _evaluationService;
+        private readonly IAppSettingsService _settingsService;
 
-        public EvaluationController(IEvaluationService evaluationService)
+        public EvaluationController(IEvaluationService evaluationService, IAppSettingsService settingsService)
         {
             _evaluationService = evaluationService;
+            _settingsService = settingsService;
         }
 
         // GET: api/evaluations/GetAll
@@ -53,6 +55,13 @@ namespace ProfRate.Controllers
         [Authorize(Roles = "Student")] // الطلاب فقط هم من يقيمون
         public async Task<IActionResult> AddEvaluation([FromBody] EvaluationDTO dto)
         {
+            // التحقق هل التقييم مفتوح؟
+            var isOpen = await _settingsService.IsEvaluationOpen();
+            if (!isOpen)
+            {
+                return BadRequest(new { message = "عفواً، التقييم مغلق حالياً. يرجى المحاولة لاحقاً." });
+            }
+
             try
             {
                 var evaluation = await _evaluationService.AddEvaluation(dto);

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1200">
-    <title>ProfRate - إدارة المحاضرين</title>
+    <title>نظام تقييم المحاضرين - إدارة المحاضرين</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -90,7 +90,7 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <h1><i class="fas fa-graduation-cap"></i> ProfRate</h1>
+                <h1><i class="fas fa-graduation-cap"></i> تقييم المحاضرين</h1>
                 <p>نظام تقييم المحاضرين</p>
             </div>
 
@@ -167,6 +167,12 @@
                     </button>
                 </div>
 
+                <!-- Lecturer Count - Centered -->
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <span id="lecturerCount"
+                        style="font-size: 18px; font-weight: 600; color: #667eea; background: linear-gradient(135deg, #f0f4ff 0%, #e8eeff 100%); padding: 8px 20px; border-radius: 20px; display: inline-block;"></span>
+                </div>
+
                 <!-- Search Bar -->
                 <div class="card" style="margin-bottom: 20px;">
                     <div style="display: flex; gap: 10px;">
@@ -237,13 +243,12 @@
                                     <th>#</th>
                                     <th>المحاضر</th>
                                     <th>Username</th>
-                                    <th>المادة</th>
-                                    <th>إجراء</th>
+                                    <th>المواد المسجل فيها</th>
                                 </tr>
                             </thead>
                             <tbody id="assignmentsTable">
                                 <tr>
-                                    <td colspan="5" style="text-align: center;">جاري التحميل...</td>
+                                    <td colspan="4" style="text-align: center;">جاري التحميل...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -408,6 +413,9 @@
                     </td>
                 </tr>
             `).join('');
+
+            // Update lecturer count
+            document.getElementById('lecturerCount').textContent = 'عدد المحاضرين: ' + result.data.length;
         }
 
         function openModal() {
@@ -513,28 +521,55 @@
             const tbody = document.getElementById('assignmentsTable');
 
             if (!result.success || result.data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">لا توجد تعيينات</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">لا توجد تعيينات</td></tr>';
                 return;
             }
 
             allAssignments = result.data;
 
-            tbody.innerHTML = result.data.map((a, i) => `
+            // Group by lecturer
+            const grouped = {};
+            result.data.forEach(a => {
+                const lecturerId = a.lecturerId;
+                if (!grouped[lecturerId]) {
+                    grouped[lecturerId] = {
+                        lecturer: a.lecturer,
+                        subjects: []
+                    };
+                }
+                grouped[lecturerId].subjects.push({
+                    id: a.lecturerSubjectId,
+                    subjectName: a.subject?.subjectName || ''
+                });
+            });
+
+            let index = 0;
+            tbody.innerHTML = Object.values(grouped).map(g => {
+                index++;
+                const subjectsList = g.subjects.map(s =>
+                    `<div style="padding: 5px 10px; margin: 3px 0; background: #f8f9fa; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                        <span><strong>${s.subjectName}</strong></span>
+                        <div>
+                            <button class="btn btn-primary btn-sm" onclick="editAssignment(${s.id})" style="padding: 3px 8px;"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteAssignment(${s.id})" style="padding: 3px 8px;"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>`
+                ).join('');
+
+                return `
                 <tr>
-                    <td>${i + 1}</td>
-                    <td>${a.lecturer?.firstName || ''} ${a.lecturer?.lastName || ''}</td>
-                    <td><code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">${a.lecturer?.username || ''}</code></td>
-                    <td>${a.subject?.subjectName || ''}</td>
+                    <td>${index}</td>
+                    <td>${g.lecturer?.firstName || ''} ${g.lecturer?.lastName || ''}</td>
+                    <td><code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">${g.lecturer?.username || ''}</code></td>
                     <td>
-                        <button class="btn btn-primary btn-sm" onclick="editAssignment(${a.lecturerSubjectId})">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteAssignment(${a.lecturerSubjectId})">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                        <details style="cursor: pointer;">
+                            <summary style="color: #667eea; font-weight: 600;"><i class="fas fa-book"></i> ${g.subjects.length} مادة</summary>
+                            <div style="margin-top: 8px;">${subjectsList}</div>
+                        </details>
                     </td>
                 </tr>
-            `).join('');
+            `;
+            }).join('');
         }
 
         function closeEditModal() {

@@ -31,7 +31,9 @@ namespace ProfRate.Controllers
                 FirstName = l.FirstName,
                 LastName = l.LastName,
                 Username = l.Username,
-                AdminId = l.AdminId
+                AdminId = l.AdminId,
+                AdminRating = l.AdminRating,
+                Subjects = l.LecturerSubjects.Select(ls => ls.Subject.SubjectName).ToList()
             });
             return Ok(safeLecturers);
         }
@@ -49,7 +51,9 @@ namespace ProfRate.Controllers
                 FirstName = l.FirstName,
                 LastName = l.LastName,
                 Username = l.Username,
-                AdminId = l.AdminId
+                AdminId = l.AdminId,
+                AdminRating = l.AdminRating,
+                Subjects = l.LecturerSubjects.Select(ls => ls.Subject.SubjectName).ToList()
             });
             return Ok(safeLecturers);
         }
@@ -120,6 +124,28 @@ namespace ProfRate.Controllers
                 return NotFound(new { message = "المحاضر غير موجود" });
             }
             return Ok(new { message = "تم حذف المحاضر بنجاح" });
+        }
+
+        // PUT: api/lecturers/UpdateRating/5
+        // تحديث تقييم الأدمن للمحاضر
+        [HttpPut]
+        [Route("UpdateRating/{id}")]
+        [Authorize(Roles = "Admin")] // الأدمن فقط
+        public async Task<IActionResult> UpdateRating(int id, [FromBody] int rating)
+        {
+            try
+            {
+                var lecturer = await _lecturerService.UpdateAdminRating(id, rating);
+                if (lecturer == null)
+                {
+                    return NotFound(new { message = "المحاضر غير موجود" });
+                }
+                return Ok(new { message = "تم تحديث التقييم بنجاح", rating = lecturer.AdminRating });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
     }
 }

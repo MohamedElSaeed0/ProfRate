@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1200">
-    <title>ProfRate - تقييم المحاضرين</title>
+    <title>نظام تقييم المحاضرين - تقييم المحاضرين</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -13,7 +13,7 @@
     <div class="app-container">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <h1><i class="fas fa-graduation-cap"></i> ProfRate</h1>
+                <h1><i class="fas fa-graduation-cap"></i> تقييم المحاضرين</h1>
                 <p>نظام تقييم المحاضرين</p>
             </div>
             <ul class="nav-menu">
@@ -35,14 +35,14 @@
 
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">تقييم المواد المسجلة</h3>
+                    <h3 class="card-title">تقييم المحاضرين</h3>
                 </div>
 
                 <form id="evaluationForm">
                     <div class="form-group">
-                        <label class="form-label">اختر المادة لتقييم محاضرها</label>
-                        <select class="form-control" id="subjectSelect" required>
-                            <option value="">اختر المادة</option>
+                        <label class="form-label">اختر المحاضر للتقييم</label>
+                        <select class="form-control" id="lecturerSelect" required>
+                            <option value="">اختر المحاضر</option>
                         </select>
                     </div>
 
@@ -75,27 +75,68 @@
         const studentId = localStorage.getItem('userId');
         let questions = [];
         let studentSubjects = [];
+        let isEvaluationOpen = true;
 
         async function loadData() {
+            // التحقق هل التقييم مفتوح أولاً
+            const statusRes = await apiCall('/settings/IsEvaluationOpen', 'GET');
+            if (statusRes.success && !statusRes.data.isOpen) {
+                isEvaluationOpen = false;
+                document.getElementById('lecturerSelect').innerHTML = '<option value="">التقييم مغلق حالياً</option>';
+                document.getElementById('lecturerSelect').disabled = true;
+                document.getElementById('questionsContainer').innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #e74c3c;">
+                        <i class="fas fa-lock" style="font-size: 48px; margin-bottom: 20px;"></i>
+                        <h3>عفواً، التقييم مغلق حالياً</h3>
+                        <p>يرجى المحاولة لاحقاً عند فتح فترة التقييم</p>
+                    </div>
+                `;
+                document.getElementById('questionsContainer').style.display = 'block';
+                document.getElementById('submitBtn').style.display = 'none';
+                return;
+            }
+
             // تحميل المواد المسجل فيها الطالب مع المحاضرين
             const mySubjects = await apiCall(`/studentsubjects/GetByStudent/${studentId}`);
-            const subjectSelect = document.getElementById('subjectSelect');
+            const lecturerSelect = document.getElementById('lecturerSelect');
 
             if (mySubjects.success && mySubjects.data.length > 0) {
                 studentSubjects = mySubjects.data;
 
-                // فلتر المواد اللي ملهاش محاضر (لو فيه خطأ قديم)
+                // فلتر المواد اللي ملهاش محاضر
                 const validSubjects = studentSubjects.filter(ss => ss.lecturerId != null);
 
-                if (validSubjects.length === 0) {
-                    subjectSelect.innerHTML = '<option value="">لا توجد مواد مسجلة مع محاضرين - تواصل مع الأدمن</option>';
+                // استخراج المحاضرين الفريدين مع كل موادهم
+                const lecturerMap = new Map();
+
+                validSubjects.forEach(ss => {
+                    if (!lecturerMap.has(ss.lecturerId)) {
+                        lecturerMap.set(ss.lecturerId, {
+                            lecturerId: ss.lecturerId,
+                            lecturerName: (ss.lecturer?.firstName || '') + ' ' + (ss.lecturer?.lastName || ''),
+                            subjectId: ss.subjectId, // أول مادة للحفظ في الـ DB
+                            subjects: [ss.subject?.subjectName || '']
+                        });
+                    } else {
+                        // إضافة المادة لقائمة مواد المحاضر
+                        const lec = lecturerMap.get(ss.lecturerId);
+                        if (ss.subject?.subjectName && !lec.subjects.includes(ss.subject.subjectName)) {
+                            lec.subjects.push(ss.subject.subjectName);
+                        }
+                    }
+                });
+
+                const uniqueLecturers = Array.from(lecturerMap.values());
+
+                if (uniqueLecturers.length === 0) {
+                    lecturerSelect.innerHTML = '<option value="">لا يوجد محاضرين - تواصل مع الأدمن</option>';
                 } else {
-                    validSubjects.forEach(ss => {
-                        subjectSelect.innerHTML += `<option value="${ss.studentSubjectId}">${ss.subject?.subjectName || 'مادة بدون اسم'} (د. ${ss.lecturer?.lastName || ''})</option>`;
+                    uniqueLecturers.forEach(lec => {
+                        lecturerSelect.innerHTML += `<option value="${lec.lecturerId}" data-subject="${lec.subjectId}">د. ${lec.lecturerName}</option>`;
                     });
                 }
             } else {
-                subjectSelect.innerHTML = '<option value="">لا توجد مواد مسجلة - تواصل مع الأدمن</option>';
+                lecturerSelect.innerHTML = '<option value="">لا توجد مواد مسجلة - تواصل مع الأدمن</option>';
             }
 
             // تحميل الأسئلة
@@ -105,33 +146,33 @@
             }
         }
 
-        // عند اختيار المادة
-        document.getElementById('subjectSelect').addEventListener('change', function () {
-            const studentSubjectId = this.value;
+        // عند اختيار المحاضر
+        document.getElementById('lecturerSelect').addEventListener('change', function () {
+            const lecturerId = this.value;
             const container = document.getElementById('questionsContainer');
             const submitBtn = document.getElementById('submitBtn');
             const lecturerInfo = document.getElementById('lecturerInfo');
 
-            if (!studentSubjectId) {
+            if (!lecturerId) {
                 container.style.display = 'none';
                 submitBtn.style.display = 'none';
                 lecturerInfo.style.display = 'none';
                 return;
             }
 
-            // البحث عن تفاصيل المادة والمحاضر المختار
-            const selected = studentSubjects.find(ss => ss.studentSubjectId == studentSubjectId);
+            // الحصول على الـ SubjectId من الـ data attribute
+            const selectedOption = this.options[this.selectedIndex];
+            const subjectId = selectedOption.dataset.subject;
+            const lecturerName = selectedOption.textContent;
 
-            if (selected && selected.lecturer) {
-                document.getElementById('lecturerName').textContent = selected.lecturer.firstName + ' ' + selected.lecturer.lastName;
-                document.getElementById('lecturerId').value = selected.lecturerId;
-                document.getElementById('subjectId').value = selected.subjectId;
+            document.getElementById('lecturerName').textContent = lecturerName;
+            document.getElementById('lecturerId').value = lecturerId;
+            document.getElementById('subjectId').value = subjectId;
 
-                lecturerInfo.style.display = 'block';
-                renderQuestions();
-                container.style.display = 'block';
-                submitBtn.style.display = 'block';
-            }
+            lecturerInfo.style.display = 'block';
+            renderQuestions();
+            container.style.display = 'block';
+            submitBtn.style.display = 'block';
         });
 
         function renderQuestions() {
@@ -144,25 +185,20 @@
             container.innerHTML = questions.map((q, i) => `
                 <div class="card" style="margin-top: 15px;">
                     <p style="margin-bottom: 15px; font-weight: 500;">${i + 1}. ${q.questionText}</p>
-                    <div class="rating" data-question="${q.questionId}">
-                        ${[1, 2, 3, 4, 5].map(n => `<span class="star" data-value="${n}">★</span>`).join('')}
-                    </div>
-                    <input type="hidden" name="rating_${q.questionId}" value="0">
+                    <textarea name="answer_${q.questionId}" class="form-control" 
+                        placeholder="اكتب إجابتك هنا (400 حرف كحد أقصى)..." 
+                        maxlength="400" rows="4" style="resize: vertical;"></textarea>
+                    <small style="color: gray; display: block; text-align: left; margin-top: 5px;">
+                        <span class="char-count-${q.questionId}">0</span>/400
+                    </small>
                 </div>
             `).join('');
 
-            // إضافة events للنجوم
-            document.querySelectorAll('.rating').forEach(rating => {
-                rating.querySelectorAll('.star').forEach(star => {
-                    star.addEventListener('click', function () {
-                        const value = this.dataset.value;
-                        const questionId = this.parentElement.dataset.question;
-                        document.querySelector(`input[name="rating_${questionId}"]`).value = value;
-
-                        this.parentElement.querySelectorAll('.star').forEach((s, i) => {
-                            s.classList.toggle('active', i < value);
-                        });
-                    });
+            // إضافة عداد الحروف
+            questions.forEach(q => {
+                const textarea = document.querySelector(`textarea[name="answer_${q.questionId}"]`);
+                textarea.addEventListener('input', function () {
+                    document.querySelector(`.char-count-${q.questionId}`).textContent = this.value.length;
                 });
             });
         }
@@ -178,40 +214,52 @@
                 return;
             }
 
-            let hasRating = false;
+            let hasAnswer = false;
             let errorCount = 0;
+            let successCount = 0;
 
             for (const q of questions) {
-                const rating = document.querySelector(`input[name="rating_${q.questionId}"]`).value;
-                if (rating > 0) {
-                    hasRating = true;
+                const answer = document.querySelector(`textarea[name="answer_${q.questionId}"]`).value.trim();
+                if (answer.length > 0) {
+                    hasAnswer = true;
                     const res = await EvaluationsAPI.add({
-                        rating: parseInt(rating),
+                        textAnswer: answer,
                         studentId: parseInt(studentId),
                         questionId: q.questionId,
                         lecturerId: parseInt(lecturerId),
                         subjectId: parseInt(subjectId)
                     });
 
-                    if (!res.success) {
+                    if (res.success) {
+                        successCount++;
+                    } else {
                         errorCount++;
                     }
                 }
             }
 
-            if (!hasRating) {
-                showAlert('الرجاء تقييم سؤال واحد على الأقل', 'danger');
+            if (!hasAnswer) {
+                showAlert('الرجاء الإجابة على سؤال واحد على الأقل', 'danger');
                 return;
             }
 
             if (errorCount === 0) {
-                showAlert('تم إرسال التقييم بنجاح! شكراً لك.');
-                setTimeout(() => window.location.reload(), 2000);
+                showAlert('تم إرسال تقييمك بنجاح! شكراً لك.');
+                resetForm();
+            } else if (successCount === 0) {
+                showAlert('لقد قمت بتقييم هذا المحاضر في هذه المادة من قبل!', 'danger');
             } else {
-                showAlert(`تم حفظ التقييمات الجديدة. (ملاحظة: بعض الأسئلة تم تقييمها مسبقاً، لذا لم يتم تكرارها)`, 'info');
-                setTimeout(() => window.location.reload(), 3000);
+                showAlert('تم حفظ بعض الإجابات. (بعض الأسئلة كانت مُجاب عليها مسبقاً)', 'info');
+                resetForm();
             }
         });
+
+        function resetForm() {
+            document.getElementById('subjectSelect').value = '';
+            document.getElementById('questionsContainer').style.display = 'none';
+            document.getElementById('submitBtn').style.display = 'none';
+            document.getElementById('lecturerInfo').style.display = 'none';
+        }
 
         loadData();
     </script>

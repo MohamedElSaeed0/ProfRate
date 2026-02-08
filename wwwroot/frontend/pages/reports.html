@@ -4,16 +4,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1200">
-    <title>ProfRate - التقارير</title>
+    <title>نظام تقييم المحاضرين - التقارير</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .rating-input {
+            width: 80px;
+            padding: 5px 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .rating-input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        .save-rating-btn {
+            padding: 8px 20px;
+            background: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-size: 14px;
+            display: inline-block;
+        }
+
+        .save-rating-btn:hover {
+            background: #27ae60;
+        }
+
+        .reset-rating-btn {
+            padding: 8px 15px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-size: 14px;
+            display: inline-block;
+        }
+
+        .reset-rating-btn:hover {
+            background: #c0392b;
+        }
+
+        .answer-text {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            max-width: 400px;
+            word-wrap: break-word;
+        }
+
+        .rating-display {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .rating-high {
+            color: #27ae60;
+        }
+
+        .rating-medium {
+            color: #f39c12;
+        }
+
+        .rating-low {
+            color: #e74c3c;
+        }
+    </style>
 </head>
 
 <body>
     <div class="app-container">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <h1><i class="fas fa-graduation-cap"></i> ProfRate</h1>
+                <h1><i class="fas fa-graduation-cap"></i> تقييم المحاضرين</h1>
                 <p>نظام تقييم المحاضرين</p>
             </div>
             <ul class="nav-menu">
@@ -39,9 +112,10 @@
                 <h2 class="page-title">تقارير التقييمات</h2>
             </div>
 
+            <!-- تقييم المحاضرين بواسطة الأدمن -->
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">ملخص تقييمات المحاضرين</h3>
+                    <h3 class="card-title">تقييم المحاضرين (من 100)</h3>
                 </div>
                 <div class="table-container">
                     <table>
@@ -49,12 +123,12 @@
                             <tr>
                                 <th>#</th>
                                 <th>المحاضر</th>
-                                <th>المادة</th>
-                                <th>متوسط التقييم</th>
-                                <th>عدد التقييمات</th>
+                                <th>التقييم الحالي</th>
+                                <th>تقييم جديد</th>
+                                <th>عدد الإجابات</th>
                             </tr>
                         </thead>
-                        <tbody id="reportsTable">
+                        <tbody id="lecturersRating">
                             <tr>
                                 <td colspan="5" style="text-align: center;">جاري التحميل...</td>
                             </tr>
@@ -63,26 +137,25 @@
                 </div>
             </div>
 
-            <!-- All Evaluations -->
+            <!-- إجابات الطلاب -->
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">كل التقييمات</h3>
+                    <h3 class="card-title">إجابات الطلاب</h3>
                 </div>
                 <div class="table-container">
                     <table>
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th>الطالب</th>
                                 <th>المحاضر</th>
                                 <th>المادة</th>
                                 <th>السؤال</th>
-                                <th>التقييم</th>
+                                <th>الإجابة</th>
                             </tr>
                         </thead>
                         <tbody id="allEvaluations">
                             <tr>
-                                <td colspan="6" style="text-align: center;">جاري التحميل...</td>
+                                <td colspan="5" style="text-align: center;">جاري التحميل...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -95,51 +168,165 @@
     <script>
         checkAuth();
 
-        async function loadReports() {
-            // تقرير ملخص
-            const report = await EvaluationsAPI.getReport();
-            const reportBody = document.getElementById('reportsTable');
+        // متغير عام لتخزين عدد الإجابات لكل محاضر
+        let lecturerEvalCounts = {};
+        let lecturersMap = {};
 
-            if (report.success && report.data.length > 0) {
-                reportBody.innerHTML = report.data.map((r, i) => `
+        async function loadReports() {
+            // تحميل المحاضرين مع تقييماتهم
+            const lecturers = await LecturersAPI.getAll();
+            const lecturersBody = document.getElementById('lecturersRating');
+
+            if (lecturers.success && lecturers.data.length > 0) {
+                // تخزين المواد لكل محاضر
+                lecturers.data.forEach(l => {
+                    lecturersMap[l.lecturerId] = l.subjects && l.subjects.length > 0 ? l.subjects.join(' / ') : '';
+                });
+
+                // حساب عدد الإجابات لكل محاضر
+                const allEvals = await EvaluationsAPI.getAll();
+                lecturerEvalCounts = {};
+                if (allEvals.success) {
+                    allEvals.data.forEach(e => {
+                        const lecId = e.lecturerId;
+                        lecturerEvalCounts[lecId] = (lecturerEvalCounts[lecId] || 0) + 1;
+                    });
+                }
+
+                lecturersBody.innerHTML = lecturers.data.map((l, i) => {
+                    const fullName = `${l.firstName} ${l.lastName}`;
+                    const count = lecturerEvalCounts[l.lecturerId] || 0;
+                    const rating = l.adminRating || 0;
+                    const ratingClass = rating >= 70 ? 'rating-high' : rating >= 40 ? 'rating-medium' : 'rating-low';
+                    const hasEvaluations = count > 0;
+                    const hasRating = l.adminRating != null && l.adminRating > 0;
+
+                    return `
                     <tr>
                         <td>${i + 1}</td>
-                        <td>${r.lecturerName}</td>
-                        <td>${r.subjectName}</td>
+                        <td>${fullName}</td>
                         <td>
-                            <span style="color: ${r.averageRating >= 4 ? 'green' : r.averageRating >= 2.5 ? 'orange' : 'red'}; font-weight: bold;">
-                                ${r.averageRating.toFixed(1)} / 5
-                            </span>
+                            <span class="rating-display ${ratingClass}">${rating}/100</span>
                         </td>
-                        <td>${r.totalEvaluations}</td>
+                        <td>
+                            ${hasEvaluations ? `
+                                <input type="number" class="rating-input" id="rating_${l.lecturerId}" 
+                                    value="${rating}" min="1" max="100" placeholder="1-100">
+                                <button class="save-rating-btn" onclick="saveRating(${l.lecturerId})">
+                                    <i class="fas fa-save"></i> حفظ
+                                </button>
+                                ${hasRating ? `
+                                    <button class="reset-rating-btn" onclick="resetRating(${l.lecturerId})">
+                                        <i class="fas fa-undo"></i> إعادة ضبط
+                                    </button>
+                                ` : ''}
+                            ` : `
+                                <span style="color: #888; font-style: italic;">لا يوجد إجابات للتقييم</span>
+                            `}
+                        </td>
+                        <td>${count}</td>
                     </tr>
-                `).join('');
+                `}).join('');
             } else {
-                reportBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">لا توجد تقييمات</td></tr>';
+                lecturersBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">لا يوجد محاضرين</td></tr>';
             }
 
-            // كل التقييمات
+            // تحميل كل الإجابات
             const all = await EvaluationsAPI.getAll();
             const allBody = document.getElementById('allEvaluations');
 
             if (all.success && all.data.length > 0) {
-                allBody.innerHTML = all.data.map((e, i) => `
+                allBody.innerHTML = all.data.map((e, i) => {
+                    const lecturerSubjects = lecturersMap[e.lecturerId] || e.subjectName || '-';
+                    return `
                     <tr>
                         <td>${i + 1}</td>
-                        <td>طالب</td>
                         <td>${e.lecturerName || ''}</td>
-                        <td>${e.subjectName || ''}</td>
+                        <td>${lecturerSubjects}</td>
                         <td>${e.questionText || ''}</td>
-                        <td>${'★'.repeat(e.rating)}${'☆'.repeat(5 - e.rating)}</td>
+                        <td><div class="answer-text">${e.textAnswer || ''}</div></td>
                     </tr>
-                `).join('');
+                `}).join('');
             } else {
-                allBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">لا توجد تقييمات</td></tr>';
+                allBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">لا توجد إجابات</td></tr>';
+            }
+        }
+
+        async function saveRating(lecturerId) {
+            const rating = parseInt(document.getElementById(`rating_${lecturerId}`).value);
+
+            // التحقق من وجود إجابات
+            if (!lecturerEvalCounts[lecturerId] || lecturerEvalCounts[lecturerId] === 0) {
+                showAlert('لا يمكن تقييم محاضر ليس له إجابات من الطلاب', 'danger');
+                return;
+            }
+
+            if (!rating || rating < 1 || rating > 100) {
+                showAlert('التقييم يجب أن يكون بين 1 و 100', 'danger');
+                return;
+            }
+
+            const res = await apiCall(`/lecturers/UpdateRating/${lecturerId}`, 'PUT', rating);
+
+            if (res.success) {
+                showAlert('تم حفظ التقييم بنجاح');
+                loadReports();
+            } else {
+                showAlert(res.error || 'حدث خطأ أثناء حفظ التقييم', 'danger');
+            }
+        }
+
+        // ========== Custom Confirm Function ==========
+        function showConfirm(message) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('confirmModal');
+                document.getElementById('confirmMessage').textContent = message;
+                modal.classList.add('active');
+
+                document.getElementById('confirmYes').onclick = () => {
+                    modal.classList.remove('active');
+                    resolve(true);
+                };
+
+                document.getElementById('confirmNo').onclick = () => {
+                    modal.classList.remove('active');
+                    resolve(false);
+                };
+            });
+        }
+
+        async function resetRating(lecturerId) {
+            const confirmed = await showConfirm('هل أنت متأكد من إعادة ضبط تقييم هذا المحاضر؟');
+            if (!confirmed) return;
+
+            // نبعت 0 وهنعدل الـ backend يقبله كـ reset
+            const res = await apiCall(`/lecturers/UpdateRating/${lecturerId}`, 'PUT', 0);
+
+            if (res.success) {
+                showAlert('تم إعادة ضبط التقييم');
+                loadReports();
+            } else {
+                showAlert(res.error || 'حدث خطأ', 'danger');
             }
         }
 
         loadReports();
     </script>
+
+    <!-- Custom Confirm Modal -->
+    <div class="confirm-modal-overlay" id="confirmModal">
+        <div class="confirm-modal">
+            <div class="confirm-modal-icon warning">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3>تأكيد العملية</h3>
+            <p id="confirmMessage">هل أنت متأكد من هذا الإجراء؟</p>
+            <div class="confirm-modal-buttons">
+                <button class="btn btn-danger" id="confirmYes">نعم، تأكيد</button>
+                <button class="btn" id="confirmNo" style="background: #e2e8f0;">إلغاء</button>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

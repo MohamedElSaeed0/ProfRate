@@ -5,7 +5,8 @@ using Microsoft.IdentityModel.Tokens;
 using ProfRate.Data;
 using ProfRate.Services;
 using System.Text;
-
+using ProfRate.Middleware;
+using System.Text.Json.Serialization;
 var builder = WebApplication.CreateBuilder(args);
 
 // ===== إضافة الـ Services =====
@@ -14,7 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     });
 
 // 2. إضافة الـ Swagger with JWT Support
@@ -62,6 +63,7 @@ builder.Services.AddScoped<IQuestionService, QuestionService>();
 builder.Services.AddScoped<ISubjectService, SubjectService>();
 builder.Services.AddScoped<IStudentSubjectService, StudentSubjectService>();
 builder.Services.AddScoped<ILecturerSubjectService, LecturerSubjectService>();
+builder.Services.AddScoped<IAppSettingsService, AppSettingsService>(); // إعدادات التطبيق
 
 // 5. إضافة الـ JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -97,10 +99,10 @@ builder.Services.AddCors(options =>
     });
 });
 
-// 7. إضافة Memory Cache (للأداء)
+// 7.  Memory Cache (للأداء)
 builder.Services.AddMemoryCache();
 
-// 8. إضافة Rate Limiting (للحماية من الهجمات)
+// 8.  Rate Limiting (للحماية من الهجمات)
 builder.Services.AddRateLimiter(options =>
 {
     // General Policy
@@ -124,54 +126,8 @@ builder.Services.AddRateLimiter(options =>
 
 var app = builder.Build();
 
-// ===== Database Seeding - إنشاء Admin افتراضي (معطّل حالياً) =====
-// using (var scope = app.Services.CreateScope())
-// {
-//     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-//     
-//     // إنشاء أو تحديث Admin افتراضي
-//     var existingAdmin = context.Admins.FirstOrDefault(a => a.Username == "admin");
-//     if (existingAdmin == null)
-//     {
-//         context.Admins.Add(new ProfRate.Entities.Admin
-//         {
-//             Username = "admin",
-//             Password = "admin123",
-//             FirstName = "System",
-//             LastName = "Admin"
-//         });
-//         context.SaveChanges();
-//         Console.WriteLine("✅ تم إنشاء Admin افتراضي: admin / admin123");
-//     }
-//     else
-//     {
-//         // تحديث البيانات لو ناقصة
-//         bool updated = false;
-//         if (existingAdmin.Password != "admin123")
-//         {
-//             existingAdmin.Password = "admin123";
-//             updated = true;
-//         }
-//         if (string.IsNullOrEmpty(existingAdmin.FirstName))
-//         {
-//             existingAdmin.FirstName = "System";
-//             updated = true;
-//         }
-//         if (string.IsNullOrEmpty(existingAdmin.LastName))
-//         {
-//             existingAdmin.LastName = "Admin";
-//             updated = true;
-//         }
-//         if (updated)
-//         {
-//             context.SaveChanges();
-//             Console.WriteLine("✅ تم تحديث Admin: admin / admin123");
-//         }
-//     }
-// }
-
 // ===== Configure the HTTP request pipeline =====
-app.UseMiddleware<ProfRate.Middleware.ExceptionMiddleware>();
+app.UseMiddleware<ExceptionMiddleware>();
 
 // Swagger (للتطوير فقط)
 if (app.Environment.IsDevelopment())
@@ -201,8 +157,8 @@ app.UseAuthorization();
 app.MapControllers();
 
 // Redirect root to frontend
-//app.MapGet("/", () => Results.Redirect("/frontend/login.html"));
-//app.MapGet("/login.html", () => Results.Redirect("/frontend/login.html"));
+app.MapGet("/", () => Results.Redirect("/frontend/login.html"));
+app.MapGet("/login.html", () => Results.Redirect("/frontend/login.html"));
 
 // تشغيل التطبيق
 app.Run();

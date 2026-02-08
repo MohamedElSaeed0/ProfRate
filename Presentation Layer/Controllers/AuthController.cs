@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using ProfRate.DTOs;
 using ProfRate.Services;
-
+using Microsoft.AspNetCore.RateLimiting;
 namespace ProfRate.Controllers
 {
     [Route("api/auth")]
@@ -19,7 +19,7 @@ namespace ProfRate.Controllers
         // تسجيل الدخول
         [HttpPost]
         [Route("login")]
-        [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("login")]
+        [EnableRateLimiting("login")]
         public async Task<IActionResult> Login([FromBody] LoginDTO loginDto)
         {
             var result = await _authService.Login(loginDto);

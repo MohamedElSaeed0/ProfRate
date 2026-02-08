@@ -15,7 +15,7 @@ namespace ProfRate.Services
             _context = context;
         }
 
-        // إضافة تقييم جديد مع التحقق من التكرار
+        // إضافة تقييم جديد (إجابة نصية)
         public async Task<Evaluation> AddEvaluation(EvaluationDTO dto)
         {
             if (dto.StudentId <= 0 || dto.LecturerId <= 0 || dto.SubjectId <= 0 || dto.QuestionId <= 0)
@@ -23,22 +23,26 @@ namespace ProfRate.Services
                 throw new InvalidOperationException("بيانات التقييم غير مكتملة (معرفات غير صالحة).");
             }
 
-            // التحقق هل قام الطالب بتقييم هذا السؤال لنفس الدكتور والمادة من قبل في الدورة الحالية؟
+            if (string.IsNullOrWhiteSpace(dto.TextAnswer))
+            {
+                throw new InvalidOperationException("الإجابة مطلوبة.");
+            }
+
+            // التحقق هل قام الطالب بتقييم هذا السؤال لنفس الدكتور من قبل؟ (بغض النظر عن المادة)
             var exists = await _context.Evaluations
                 .AnyAsync(e => e.StudentId == dto.StudentId &&
                                e.LecturerId == dto.LecturerId &&
-                               e.SubjectId == dto.SubjectId &&
                                e.QuestionId == dto.QuestionId &&
                                !e.IsArchived);
 
             if (exists)
             {
-                throw new InvalidOperationException("لقد قمت بتقييم هذا السؤال للمحاضر والمادة مسبقاً.");
+                throw new InvalidOperationException("لقد قمت بتقييم هذا السؤال للمحاضر مسبقاً.");
             }
 
             var evaluation = new Evaluation
             {
-                Rating = dto.Rating,
+                TextAnswer = dto.TextAnswer,
                 StudentId = dto.StudentId,
                 QuestionId = dto.QuestionId,
                 LecturerId = dto.LecturerId,
@@ -52,100 +56,91 @@ namespace ProfRate.Services
         }
 
         // إعادة ضبط التقييمات (أرشفة الدورة الحالية)
+        // أرشفة كل التقييمات وإعادة تقييم المحاضرين لـ 0
         public async Task<bool> ResetEvaluations()
         {
-            // الحصول على كل التقييمات النشطة
             var activeEvaluations = await _context.Evaluations
                 .Where(e => !e.IsArchived)
                 .ToListAsync();
 
             if (activeEvaluations.Any())
             {
+                // أرشفة التقييمات
                 foreach (var eval in activeEvaluations)
                 {
                     eval.IsArchived = true;
                 }
+
+                // إعادة تقييم المحاضرين لـ 0
+                var lecturers = await _context.Lecturers.ToListAsync();
+                foreach (var lecturer in lecturers)
+                {
+                    lecturer.AdminRating = null;
+                }
+
                 await _context.SaveChangesAsync();
                 return true;
             }
             return false;
         }
 
-        // الحصول على تقييمات محاضر معين (مجمعة وبدون أسماء طلاب)
+        // الحصول على تقييمات محاضر معين (للمحاضر نفسه يشوف إجابات الطلاب)
         public async Task<List<EvaluationResponseDTO>> GetEvaluationsByLecturer(int lecturerId)
         {
             return await _context.Evaluations.AsNoTracking()
-                .Include(e => e.Student)
-                .Include(e => e.Lecturer)
+                .Include(e => e.Question)
                 .Include(e => e.Subject)
                 .Where(e => e.LecturerId == lecturerId && !e.IsArchived)
-                .GroupBy(e => new
+                .Select(e => new EvaluationResponseDTO
                 {
-                    e.StudentId,
-                    // No need for Student details here as it should be anonymous
-                    e.SubjectId,
-                    SubjectName = e.Subject.SubjectName
-                })
-                .Select(g => new EvaluationResponseDTO
-                {
-                    EvaluationId = g.First().EvaluationId,
-                    Rating = (int)Math.Round(g.Average(e => e.Rating)),
-                    IsArchived = false,
+                    EvaluationId = e.EvaluationId,
+                    TextAnswer = e.TextAnswer,
+                    IsArchived = e.IsArchived,
+                    LecturerId = e.LecturerId,
                     StudentName = "طالب", // إخفاء هوية الطالب
-                    LecturerName = "", // Not needed for own view
-                    SubjectName = g.Key.SubjectName,
-                    QuestionText = $"تقييم عام ({g.Count()} أسئلة)"
+                    LecturerName = "",
+                    SubjectName = e.Subject.SubjectName,
+                    QuestionText = e.Question.QuestionText
                 })
                 .ToListAsync();
         }
 
-        // الحصول على تقرير التقييمات لكل محاضر
+        // الحصول على تقرير التقييمات لكل محاضر (للأدمن)
         public async Task<List<EvaluationReportDTO>> GetEvaluationReport()
         {
-            var report = await _context.Evaluations.AsNoTracking()
-                .Where(e => !e.IsArchived) // فقط التقييمات النشطة
-                .GroupBy(e => new { e.LecturerId, e.Lecturer.FirstName, e.Lecturer.LastName, e.SubjectId, e.Subject.SubjectName })
-                .Select(g => new EvaluationReportDTO
+            var lecturers = await _context.Lecturers.AsNoTracking()
+                .Select(l => new EvaluationReportDTO
                 {
-                    LecturerId = g.Key.LecturerId,
-                    LecturerName = g.Key.FirstName + " " + g.Key.LastName,
-                    SubjectName = g.Key.SubjectName,
-                    AverageRating = g.Average(e => e.Rating),
-                    TotalEvaluations = g.Count()
+                    LecturerId = l.LecturerId,
+                    LecturerName = l.FirstName + " " + l.LastName,
+                    SubjectName = "", // يمكن تعديلها لاحقاً
+                    AverageRating = l.AdminRating ?? 0, // تقييم الأدمن
+                    TotalEvaluations = _context.Evaluations.Count(e => e.LecturerId == l.LecturerId && !e.IsArchived)
                 })
                 .ToListAsync();
 
-            return report;
+            return lecturers;
         }
 
-        // الحصول على كل التقييمات (مجمعة لكل طالب/دكتور/مادة)
+        // الحصول على كل التقييمات (الإجابات النصية)
         public async Task<List<EvaluationResponseDTO>> GetAllEvaluations()
         {
             return await _context.Evaluations.AsNoTracking()
                 .Include(e => e.Student)
                 .Include(e => e.Lecturer)
                 .Include(e => e.Subject)
+                .Include(e => e.Question)
                 .Where(e => !e.IsArchived)
-                .GroupBy(e => new
+                .Select(e => new EvaluationResponseDTO
                 {
-                    e.StudentId,
-                    StudentFirstName = e.Student.FirstName,
-                    StudentLastName = e.Student.LastName,
-                    e.LecturerId,
-                    LecturerFirstName = e.Lecturer.FirstName,
-                    LecturerLastName = e.Lecturer.LastName,
-                    e.SubjectId,
-                    SubjectName = e.Subject.SubjectName
-                })
-                .Select(g => new EvaluationResponseDTO
-                {
-                    EvaluationId = g.First().EvaluationId, // مجرد ID تمثيلي
-                    Rating = (int)Math.Round(g.Average(e => e.Rating)), // متوسط التقييم للأسئلة
-                    IsArchived = false,
-                    StudentName = g.Key.StudentFirstName + " " + g.Key.StudentLastName,
-                    LecturerName = g.Key.LecturerFirstName + " " + g.Key.LecturerLastName,
-                    SubjectName = g.Key.SubjectName,
-                    QuestionText = $"تقييم عام ({g.Count()} أسئلة)" // نص توضيحي بدل سؤال محدد
+                    EvaluationId = e.EvaluationId,
+                    TextAnswer = e.TextAnswer,
+                    IsArchived = e.IsArchived,
+                    LecturerId = e.LecturerId,
+                    StudentName = e.Student.FirstName + " " + e.Student.LastName,
+                    LecturerName = e.Lecturer.FirstName + " " + e.Lecturer.LastName,
+                    SubjectName = e.Subject.SubjectName,
+                    QuestionText = e.Question.QuestionText
                 })
                 .ToListAsync();
         }

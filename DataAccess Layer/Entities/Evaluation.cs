@@ -1,10 +1,15 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace ProfRate.Entities
 {
     // التقييم - الجدول الرئيسي للتقييمات
     public class Evaluation
     {
         public int EvaluationId { get; set; }
-        public byte Rating { get; set; }  // التقييم من 1 لـ 5 مثلاً
+        
+        [MaxLength(400)]
+        public string TextAnswer { get; set; } = string.Empty;  // إجابة الطالب النصية (400 حرف)
+        
         public bool IsArchived { get; set; } = false;
 
         // Foreign Keys

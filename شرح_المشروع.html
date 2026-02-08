@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+
+<head>
+    <meta charset="UTF-8">
+    <title>شرح المشروع - ProfRate</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+            line-height: 1.8;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            direction: rtl;
+            background: #fff;
+        }
+
+        h1 {
+            color: #2563eb;
+            text-align: center;
+            font-size: 32px;
+            border-bottom: 4px solid #2563eb;
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+        }
+
+        h2 {
+            color: #1e40af;
+            font-size: 22px;
+            margin-top: 50px;
+            border-right: 5px solid #2563eb;
+            padding-right: 15px;
+            background: linear-gradient(to left, #f0f7ff, transparent);
+            padding: 15px;
+            border-radius: 0 10px 10px 0;
+        }
+
+        h3 {
+            color: #374151;
+            font-size: 18px;
+            margin-top: 30px;
+            padding-right: 10px;
+        }
+
+        p {
+            text-align: justify;
+            margin: 15px 0;
+            font-size: 15px;
+        }
+
+        .image-container {
+            text-align: center;
+            margin: 25px 0;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .image-caption {
+            margin-top: 12px;
+            font-size: 13px;
+            color: #6b7280;
+            font-style: italic;
+        }
+
+        .explanation {
+            background: #f0fdf4;
+            border-right: 4px solid #22c55e;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 10px 10px 0;
+        }
+
+        .code-note {
+            background: #fef3c7;
+            border-right: 4px solid #f59e0b;
+            padding: 12px 18px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+            font-size: 14px;
+        }
+
+        ul {
+            padding-right: 25px;
+        }
+
+        li {
+            margin: 10px 0;
+        }
+
+        .section-intro {
+            font-size: 16px;
+            color: #4b5563;
+            margin-bottom: 20px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 2px solid #e2e8f0;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th,
+        td {
+            border: 1px solid #e2e8f0;
+            padding: 12px;
+            text-align: right;
+        }
+
+        th {
+            background: #2563eb;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: #f8fafc;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>🎓 ProfRate - شرح المشروع</h1>
+    <p style="text-align: center; font-size: 18px; color: #6b7280;">نظام تقييم المحاضرين - التوثيق التقني</p>
+
+    <!-- ==================== القسم 1: هيكل المشروع ==================== -->
+    <h2>1. هيكل المشروع (N-Tier Architecture)</h2>
+
+    <p class="section-intro">
+        المشروع مبني على نمط N-Tier Architecture، وهو نمط معماري يقسم التطبيق إلى طبقات منفصلة. كل طبقة لها مسؤولية
+        محددة، مما يجعل الكود أكثر تنظيماً وسهولة في الصيانة.
+    </p>
+
+    <div class="image-container">
+        <img src="file:///C:/Users/moham/.gemini/antigravity/brain/8112cc87-8f7f-47bb-ad25-de19179e06fa/media__1770486496456.png"
+            alt="الطبقات الثلاث">
+        <p class="image-caption">الطبقات الثلاث الرئيسية للمشروع</p>
+    </div>
+
+    <div class="explanation">
+        <strong>لماذا نستخدم N-Tier Architecture؟</strong>
+        <ul>
+            <li><strong>فصل المسؤوليات:</strong> كل طبقة مسؤولة عن جزء معين من التطبيق</li>
+            <li><strong>سهولة الصيانة:</strong> يمكن تعديل طبقة دون التأثير على الأخرى</li>
+            <li><strong>قابلية الاختبار:</strong> يسهل اختبار كل طبقة بشكل منفصل</li>
+            <li><strong>إعادة الاستخدام:</strong> يمكن استخدام الطبقات في مشاريع أخرى</li>
+        </ul>
+    </div>
+
+    <!-- ==================== DataAccess Layer ==================== -->
+    <h3>📂 DataAccess Layer (طبقة الوصول للبيانات)</h3>
+
+    <p>هذه الطبقة مسؤولة عن التعامل مع قاعدة البيانات. تحتوي على الـ Entities (الكيانات) والـ Migrations (تحديثات قاعدة
+        البيانات) والـ DbContext.</p>
+
+    <div class="image-container">
+        <img src="file:///C:/Users/moham/.gemini/antigravity/brain/8112cc87-8f7f-47bb-ad25-de19179e06fa/media__1770486543639.png"
+            alt="DataAccess Layer">
+        <p class="image-caption">محتويات طبقة DataAccess Layer</p>
+    </div>
+
+    <div class="explanation">
+        <strong>محتويات الطبقة:</strong>
+        <ul>
+            <li><strong>Entities:</strong> الكلاسات التي تمثل جداول قاعدة البيانات (Student, Lecturer, Admin, etc.)</li>
+            <li><strong>Migrations:</strong> ملفات تتبع التغييرات على قاعدة البيانات</li>
+            <li><strong>AppDbContext:</strong> الكلاس الرئيسي للتعامل مع Entity Framework</li>
+        </ul>
+    </div>
+
+    <!-- ==================== Business Layer ==================== -->
+    <h3>📂 Business Layer (طبقة المنطق)</h3>
+
+    <p>هذه الطبقة تحتوي على منطق التطبيق (Business Logic). تتضمن الـ Services التي تنفذ العمليات المطلوبة، والـ
+        Interfaces التي تحدد العقود.</p>
+
+    <div class="image-container">
+        <img src="file:///C:/Users/moham/.gemini/antigravity/brain/8112cc87-8f7f-47bb-ad25-de19179e06fa/media__1770486511249.png"
+            alt="Business Layer">
+        <p class="image-caption">محتويات طبقة Business Layer</p>
+    </div>
+
+    <div class="explanation">
+        <strong>محتويات الطبقة:</strong>
+        <ul>
+            <li><strong>IServices:</strong> الـ Interfaces (IAuthService, IStudentService, etc.)</li>
+            <li><strong>Services:</strong> الكلاسات التي تنفذ الـ Interfaces (AuthService, StudentService, etc.)</li>
+        </ul>
+    </div>
+
+    <!-- ==================== Presentation Layer ==================== -->
+    <h3>📂 Presentation Layer (طبقة العرض)</h3>
+
+    <p>هذه الطبقة مسؤولة عن استقبال الطلبات من المستخدم وإرجاع الاستجابات. تحتوي على الـ Controllers والـ DTOs والـ
+        Middleware.</p>
+
+    <div class="image-container">
+        <img src="file:///C:/Users/moham/.gemini/antigravity/brain/8112cc87-8f7f-47bb-ad25-de19179e06fa/media__1770486560092.png"
+            alt="Presentation Layer">
+        <p class="image-caption">محتويات طبقة Presentation Layer</p>
+    </div>
+
+    <div class="explanation">
+        <strong>محتويات الطبقة:</strong>
+        <ul>
+            <li><strong>Controllers:</strong> الكلاسات التي تستقبل طلبات HTTP</li>
+            <li><strong>DTOs:</strong> كائنات نقل البيانات</li>
+            <li><strong>ExceptionMiddleware:</strong> معالجة الأخطاء</li>
+        </ul>
+    </div>
+
+    <!-- ==================== القسم 2: ملفات الإعدادات ==================== -->
+    <h2>2. ملفات الإعدادات (Configuration)</h2>
+
+    <p class="section-intro">
+        ملفات الإعدادات تحتوي على الإعدادات المهمة للتطبيق مثل اتصال قاعدة البيانات وإعدادات JWT.
+    </p>
+
+    <div class="image-container">
+        <img src="file:///C:/Users/moham/.gemini/antigravity/brain/8112cc87-8f7f-47bb-ad25-de19179e06fa/media__1770486647989.png"
+            alt="Config Files">
+        <p class="image-caption">ملفات الإعدادات</p>
+    </div>
+
+    <h3>محتوى ملف appsettings.json</h3>
+
+    <div class="image-container">
+        <img src="file:///C:/Users/moham/.gemini/antigravity/brain/8112cc87-8f7f-47bb-ad25-de19179e06fa/media__1770486751558.png"
+            alt="appsettings.json">
+        <p class="image-caption">محتوى ملف appsettings.json</p>
+    </div>
+
+    <div class="explanation">
+        <strong>الإعدادات المهمة:</strong>
+        <ul>
+            <li><strong>ConnectionStrings:</strong> نص الاتصال بقاعدة البيانات SQL Server</li>
+            <li><strong>Jwt:</strong> إعدادات التوثيق (Key, Issuer, Audience)</li>
+            <li><strong>Logging:</strong> إعدادات تسجيل الأحداث</li>
+        </ul>
+    </div>
+
+    <!-- ==================== القسم 3: Dependency Injection ==================== -->
+    <h2>3. حقن الاعتماديات (Dependency Injection)</h2>
+
+    <p class="section-intro">
+        Dependency Injection هو نمط تصميم يسمح بفصل إنشاء الكائنات عن استخدامها، مما يجعل الكود أكثر مرونة وقابلية
+        للاختبار.
+    </p>
+
+    <div class="image-container">
+        <img src="file:///C:/Users/moham/.gemini/antigravity/brain/8112cc87-8f7f-47bb-ad25-de19179e06fa/media__1770486701803.png"
+            alt="Dependency Injection">
+        <p class="image-caption">تسجيل الـ Services في Program.cs</p>
+    </div>
+
+    <div class="explanation">
+        <strong>كيف يعمل DI؟</strong>
+        <ul>
+            <li><strong>AddScoped:</strong> إنشاء instance جديد لكل HTTP Request</li>
+            <li><strong>Interface → Implementation:</strong> ربط الواجهة بالتنفيذ</li>
+            <li><strong>Constructor Injection:</strong> الحصول على الـ Service من خلال الـ Constructor</li>
+        </ul>
+    </div>
+
+    <div class="code-note">
+        <strong>💡 فائدة:</strong> بدلاً من إنشاء الـ Services يدوياً، الـ Framework يقوم بإنشائها وحقنها تلقائياً.
+    </div>
+
+    <!-- ==================== القسم 4: JWT Authentication ==================== -->
+    <h2>4. التوثيق باستخدام JWT</h2>
+
+    <p class="section-intro">
+        JWT (JSON Web Token) هو معيار مفتوح لإنشاء رموز وصول آمنة. نستخدمه لتوثيق المستخدمين وحماية الـ APIs.
+    </p>
+
+    <h3>إعداد JWT في Program.cs</h3>
+
+    <div class="image-container">
+        <img src="file:///C:/Users/moham/.gemini/antigravity/brain/8112cc87-8f7f-47bb-ad25-de19179e06fa/media__1770486716951.png"
+            alt="JWT Configuration">
+        <p class="image-caption">إعداد JWT Authentication</p>
+    </div>
+
+    <div class="explanation">
+        <strong>خيارات التحقق:</strong>
+        <ul>
+            <li><strong>ValidateIssuer:</strong> التحقق من مصدر الـ Token</li>
+            <li><strong>ValidateAudience:</strong> التحقق من الجهة المستهدفة</li>
+            <li><strong>ValidateLifetime:</strong> التحقق من صلاحية الـ Token</li>
+            <li><strong>ValidateIssuerSigningKey:</strong> التحقق من مفتاح التوقيع</li>
+        </ul>
+    </div>
+
+    <h3>إنشاء الـ Token</h3>
+
+    <div class="image-container">
+        <img src="file:///C:/Users/moham/.gemini/antigravity/brain/8112cc87-8f7f-47bb-ad25-de19179e06fa/media__1770487029830.png"
+            alt="GenerateToken">
+        <p class="image-caption">دالة GenerateToken في AuthService</p>
+    </div>
+
+    <div class="explanation">
+        <strong>محتويات الـ Token (Claims):</strong>
+        <ul>
+            <li><strong>UserId:</strong> معرف المستخدم</li>
+            <li><strong>Username:</strong> اسم المستخدم</li>
+            <li><strong>UserType:</strong> نوع المستخدم (Admin, Student, Lecturer)</li>
+            <li><strong>Role:</strong> دور المستخدم للتحكم في الصلاحيات</li>
+        </ul>
+    </div>
+
+    <!-- ==================== القسم 5: AuthService ==================== -->
+    <h2>5. خدمة التوثيق (AuthService)</h2>
+
+    <p class="section-intro">
+        AuthService هي الخدمة المسؤولة عن عمليات تسجيل الدخول وإنشاء الـ Tokens.
+    </p>
+
+    <div class="image-container">
+        <img src="file:///C:/Users/moham/.gemini/antigravity/brain/8112cc87-8f7f-47bb-ad25-de19179e06fa/media__1770487040212.png"
+            alt="AuthService">
+        <p class="image-caption">AuthService - دالة Login</p>
+    </div>
+
+    <div class="explanation">
+        <strong>خطوات تسجيل الدخول:</strong>
+        <ul>
+            <li>التحقق من نوع المستخدم (Admin, Student, Lecturer)</li>
+            <li>البحث عن المستخدم في قاعدة البيانات</li>
+            <li>التحقق من كلمة المرور</li>
+            <li>إنشاء الـ JWT Token</li>
+            <li>إرجاع بيانات المستخدم مع الـ Token</li>
+        </ul>
+    </div>
+
+    <!-- ==================== القسم 6: Controllers ==================== -->
+    <h2>6. الـ Controllers</h2>
+
+    <p class="section-intro">
+        الـ Controllers هي الكلاسات التي تستقبل طلبات HTTP من العميل وتعالجها باستخدام الـ Services.
+    </p>
+
+    <div class="image-container">
+        <img src="file:///C:/Users/moham/.gemini/antigravity/brain/8112cc87-8f7f-47bb-ad25-de19179e06fa/media__1770486933616.png"
+            alt="AuthController">
+        <p class="image-caption">AuthController - مثال على Controller</p>
+    </div>
+
+    <div class="explanation">
+        <strong>ملاحظات مهمة:</strong>
+        <ul>
+            <li><strong>IAuthService:</strong> استخدام Interface بدلاً من Class مباشرة (DI)</li>
+            <li><strong>[Route]:</strong> تحديد مسار الـ API</li>
+            <li><strong>[HttpPost]:</strong> تحديد نوع الطلب</li>
+            <li><strong>[EnableRateLimiting]:</strong> تطبيق تحديد معدل الطلبات</li>
+        </ul>
+    </div>
+
+    <!-- ==================== القسم 7: DTOs ==================== -->
+    <h2>7. كائنات نقل البيانات (DTOs)</h2>
+
+    <p class="section-intro">
+        DTOs (Data Transfer Objects) هي كائنات تستخدم لنقل البيانات بين الطبقات. تحتوي فقط على الحقول المطلوبة.
+    </p>
+
+    <div class="image-container">
+        <img src="file:///C:/Users/moham/.gemini/antigravity/brain/8112cc87-8f7f-47bb-ad25-de19179e06fa/media__1770486946215.png"
+            alt="DTOs">
+        <p class="image-caption">LoginDTO و LoginResponseDTO</p>
+    </div>
+
+    <div class="explanation">
+        <strong>فوائد استخدام DTOs:</strong>
+        <ul>
+            <li>فصل البيانات المطلوبة عن الـ Entity الكامل</li>
+            <li>إخفاء الحقول الحساسة (مثل كلمة المرور)</li>
+            <li>تحديد شكل البيانات المرسلة والمستقبلة</li>
+            <li>تسهيل التحقق من صحة البيانات</li>
+        </ul>
+    </div>
+
+    <!-- ==================== القسم 8: Rate Limiting ==================== -->
+    <h2>8. تحديد معدل الطلبات (Rate Limiting)</h2>
+
+    <p class="section-intro">
+        Rate Limiting هي آلية للحد من عدد الطلبات التي يمكن للمستخدم إرسالها خلال فترة زمنية معينة. نستخدمها لحماية الـ
+        API من الهجمات.
+    </p>
+
+    <div class="image-container">
+        <img src="file:///C:/Users/moham/.gemini/antigravity/brain/8112cc87-8f7f-47bb-ad25-de19179e06fa/media__1770486804600.png"
+            alt="Rate Limiting">
+        <p class="image-caption">إعداد Rate Limiting</p>
+    </div>
+
+    <div class="explanation">
+        <strong>السياسات المطبقة:</strong>
+        <ul>
+            <li><strong>General Policy:</strong> 30 طلب كل دقيقة (للـ APIs العامة)</li>
+            <li><strong>Login Policy:</strong> 5 محاولات كل 5 دقائق (لحماية صفحة الدخول)</li>
+        </ul>
+    </div>
+
+    <div class="code-note">
+        <strong>🔒 أمان:</strong> هذا يمنع هجمات Brute Force على صفحة تسجيل الدخول.
+    </div>
+
+    <!-- ==================== القسم 9: Middleware ==================== -->
+    <h2>9. الـ Middleware</h2>
+
+    <p class="section-intro">
+        Middleware هي طبقات وسيطة تعالج الطلبات قبل وصولها للـ Controllers وتعالج الاستجابات قبل إرسالها للعميل.
+    </p>
+
+    <h3>ترتيب الـ Middleware في Program.cs</h3>
+
+    <div class="image-container">
+        <img src="file:///C:/Users/moham/.gemini/antigravity/brain/8112cc87-8f7f-47bb-ad25-de19179e06fa/media__1770486859913.png"
+            alt="UseMiddleware">
+        <p class="image-caption">استخدام ExceptionMiddleware</p>
+    </div>
+
+    <div class="image-container">
+        <img src="file:///C:/Users/moham/.gemini/antigravity/brain/8112cc87-8f7f-47bb-ad25-de19179e06fa/media__1770486881752.png"
+            alt="Middleware Pipeline">
+        <p class="image-caption">ترتيب Middleware Pipeline</p>
+    </div>
+
+    <div class="explanation">
+        <strong>ترتيب التنفيذ:</strong>
+        <ul>
+            <li><strong>ExceptionMiddleware:</strong> معالجة الأخطاء</li>
+            <li><strong>UseRateLimiter:</strong> تحديد معدل الطلبات</li>
+            <li><strong>UseAuthentication:</strong> التحقق من الهوية</li>
+            <li><strong>UseAuthorization:</strong> التحقق من الصلاحيات</li>
+        </ul>
+    </div>
+
+    <h3>كود ExceptionMiddleware</h3>
+
+    <div class="image-container">
+        <img src="file:///C:/Users/moham/.gemini/antigravity/brain/8112cc87-8f7f-47bb-ad25-de19179e06fa/media__1770486918254.png"
+            alt="ExceptionMiddleware Code">
+        <p class="image-caption">كود ExceptionMiddleware الكامل</p>
+    </div>
+
+    <div class="explanation">
+        <strong>كيف يعمل؟</strong>
+        <ul>
+            <li>يلتقط أي Exception يحدث في التطبيق</li>
+            <li>يسجل الخطأ في الـ Log</li>
+            <li>يرجع رسالة خطأ موحدة للمستخدم</li>
+            <li>يخفي تفاصيل الخطأ في بيئة الإنتاج</li>
+        </ul>
+    </div>
+
+    <!-- ==================== القسم 10: إعدادات إضافية ==================== -->
+    <h2>10. إعدادات إضافية في Program.cs</h2>
+
+    <div class="image-container">
+        <img src="file:///C:/Users/moham/.gemini/antigravity/brain/8112cc87-8f7f-47bb-ad25-de19179e06fa/media__1770486739748.png"
+            alt="Additional Config">
+        <p class="image-caption">إعدادات Controllers و Swagger و Database</p>
+    </div>
+
+    <div class="explanation">
+        <strong>الإعدادات:</strong>
+        <ul>
+            <li><strong>AddControllers:</strong> إضافة دعم الـ API Controllers</li>
+            <li><strong>IgnoreCycles:</strong> تجنب مشاكل الـ Circular References في JSON</li>
+            <li><strong>Swagger:</strong> توثيق الـ API تلقائياً</li>
+            <li><strong>AddDbContext:</strong> ربط Entity Framework بقاعدة البيانات</li>
+        </ul>
+    </div>
+
+    <!-- ==================== ملخص التأمين ==================== -->
+    <h2>📋 ملخص مستويات الحماية</h2>
+
+    <table>
+        <tr>
+            <th>الميزة</th>
+            <th>الوصف</th>
+        </tr>
+        <tr>
+            <td>✅ JWT Authentication</td>
+            <td>توثيق المستخدمين باستخدام Tokens</td>
+        </tr>
+        <tr>
+            <td>✅ [Authorize] Attribute</td>
+            <td>حماية الـ APIs من الوصول غير المصرح</td>
+        </tr>
+        <tr>
+            <td>✅ Rate Limiting</td>
+            <td>منع هجمات Brute Force</td>
+        </tr>
+        <tr>
+            <td>✅ Exception Middleware</td>
+            <td>معالجة الأخطاء بشكل آمن</td>
+        </tr>
+        <tr>
+            <td>✅ DTOs</td>
+            <td>إخفاء البيانات الحساسة</td>
+        </tr>
+        <tr>
+            <td>✅ Interface Segregation</td>
+            <td>فصل الواجهات وتحسين الاختبار</td>
+        </tr>
+    </table>
+
+    <!-- ==================== Footer ==================== -->
+    <div class="footer">
+        <p>🎓 <strong>ProfRate</strong> - نظام تقييم المحاضرين</p>
+        <p>تم إنشاء هذا التوثيق © 2026</p>
+    </div>
+
+</body>
+
+</html>

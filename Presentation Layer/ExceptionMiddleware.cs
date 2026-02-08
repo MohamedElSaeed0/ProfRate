@@ -26,7 +26,6 @@ namespace ProfRate.Middleware
                 await HandleExceptionAsync(context, ex);
             }
         }
-
         private static Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
             context.Response.ContentType = "application/json";
@@ -38,7 +37,7 @@ namespace ProfRate.Middleware
             {
                 StatusCode = context.Response.StatusCode,
                 Message = "حدث خطأ، يرجى المحاولة لاحقاً",
-                Detailed = isDevelopment ? exception.Message : null // Show details only in Dev
+                Detailed = isDevelopment ? exception.Message : null 
             };
             
             return context.Response.WriteAsync(JsonSerializer.Serialize(response));

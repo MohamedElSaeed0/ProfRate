@@ -11,5 +11,6 @@ namespace ProfRate.Services
         Task<Lecturer?> GetLecturerById(int id);
         Task<List<Lecturer>> Search(string query);
         Task<Lecturer?> UpdateLecturer(int id, LecturerDTO dto);
+        Task<Lecturer?> UpdateAdminRating(int id, int rating); // تحديث تقييم الأدمن
     }
 }

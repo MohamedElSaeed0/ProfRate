@@ -4,16 +4,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1200">
-    <title>ProfRate - تقييماتي</title>
+    <title>نظام تقييم المحاضرين - تقييماتي</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .answer-text {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            max-width: 400px;
+            word-wrap: break-word;
+        }
+
+        .rating-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .rating-high {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .rating-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .rating-low {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .rating-none {
+            background: #e2e3e5;
+            color: #6c757d;
+        }
+    </style>
 </head>
 
 <body>
     <div class="app-container">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <h1><i class="fas fa-graduation-cap"></i> ProfRate</h1>
+                <h1><i class="fas fa-graduation-cap"></i> تقييم المحاضرين</h1>
                 <p>نظام تقييم المحاضرين</p>
             </div>
             <ul class="nav-menu">
@@ -35,18 +72,18 @@
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-number" id="totalEvaluations">0</div>
-                    <div class="stat-label">إجمالي التقييمات</div>
+                    <div class="stat-label">إجمالي الإجابات</div>
                 </div>
                 <div class="stat-card green">
-                    <div class="stat-number" id="averageRating">0</div>
-                    <div class="stat-label">متوسط التقييم</div>
+                    <div class="stat-number" id="adminRating">-</div>
+                    <div class="stat-label">تقييم الإدارة (من 100)</div>
                 </div>
             </div>
 
-            <!-- تفاصيل التقييمات -->
+            <!-- إجابات الطلاب -->
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">تفاصيل التقييمات (بدون أسماء الطلاب)</h3>
+                    <h3 class="card-title">إجابات الطلاب (بدون أسماء)</h3>
                 </div>
                 <div class="table-container">
                     <table>
@@ -55,7 +92,7 @@
                                 <th>#</th>
                                 <th>المادة</th>
                                 <th>السؤال</th>
-                                <th>التقييم</th>
+                                <th>إجابة الطالب</th>
                             </tr>
                         </thead>
                         <tbody id="evaluationsTable">
@@ -87,26 +124,38 @@
 
             if (!result.success || result.data.length === 0) {
                 document.getElementById('evaluationsTable').innerHTML =
-                    '<tr><td colspan="4" style="text-align: center;">لا توجد تقييمات بعد</td></tr>';
-                return;
+                    '<tr><td colspan="4" style="text-align: center;">لا توجد إجابات بعد</td></tr>';
+            } else {
+                const evaluations = result.data;
+
+                // حساب الإحصائيات
+                document.getElementById('totalEvaluations').textContent = evaluations.length;
+
+                // عرض الإجابات (بدون اسم الطالب)
+                document.getElementById('evaluationsTable').innerHTML = evaluations.map((e, i) => `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>${e.subjectName || '-'}</td>
+                        <td>${e.questionText || '-'}</td>
+                        <td><div class="answer-text">${e.textAnswer || '-'}</div></td>
+                    </tr>
+                `).join('');
             }
 
-            const evaluations = result.data;
-
-            // حساب الإحصائيات
-            document.getElementById('totalEvaluations').textContent = evaluations.length;
-            const avg = evaluations.reduce((sum, e) => sum + e.rating, 0) / evaluations.length;
-            document.getElementById('averageRating').textContent = avg.toFixed(1) + ' / 5';
-
-            // عرض التقييمات (بدون اسم الطالب)
-            document.getElementById('evaluationsTable').innerHTML = evaluations.map((e, i) => `
-                <tr>
-                    <td>${i + 1}</td>
-                    <td>${e.subjectName || '-'}</td>
-                    <td>${e.questionText || '-'}</td>
-                    <td>${'★'.repeat(e.rating)}${'☆'.repeat(5 - e.rating)}</td>
-                </tr>
-            `).join('');
+            // جلب تقييم الأدمن للمحاضر
+            const lecturerData = await LecturersAPI.getAll();
+            if (lecturerData.success) {
+                const myData = lecturerData.data.find(l => l.lecturerId == lecturerId);
+                if (myData && myData.adminRating) {
+                    const rating = myData.adminRating;
+                    let ratingClass = rating >= 70 ? 'rating-high' : rating >= 40 ? 'rating-medium' : 'rating-low';
+                    document.getElementById('adminRating').innerHTML =
+                        `<span class="rating-badge ${ratingClass}">${rating}/100</span>`;
+                } else {
+                    document.getElementById('adminRating').innerHTML =
+                        '<span class="rating-badge rating-none">لم يتم التقييم بعد</span>';
+                }
+            }
         }
 
         loadMyEvaluations();

@@ -20,6 +20,7 @@ namespace ProfRate.Data
         public DbSet<Evaluation> Evaluations { get; set; }
         public DbSet<StudentSubject> StudentSubjects { get; set; }
         public DbSet<LecturerSubject> LecturerSubjects { get; set; }
+        public DbSet<AppSettings> AppSettings { get; set; } // إعدادات التطبيق
 
         // تحديد العلاقات بين الجداول
         protected override void OnModelCreating(ModelBuilder modelBuilder)

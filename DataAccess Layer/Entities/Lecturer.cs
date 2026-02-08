@@ -22,6 +22,9 @@ namespace ProfRate.Entities
         [MaxLength(10)]
         public string Gender { get; set; } = "Male"; // Male or Female
 
+        // تقييم الأدمن للمحاضر (من 100)
+        public int? AdminRating { get; set; }
+
         // Foreign Key
         public int AdminId { get; set; }
 

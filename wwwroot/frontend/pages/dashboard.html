@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1200">
-    <title>ProfRate - لوحة التحكم</title>
+    <title>نظام تقييم المحاضرين - لوحة التحكم</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -14,7 +14,7 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <h1><i class="fas fa-graduation-cap"></i> ProfRate</h1>
+                <h1><i class="fas fa-graduation-cap"></i> تقييم المحاضرين</h1>
                 <p>نظام تقييم المحاضرين</p>
             </div>
 
@@ -97,8 +97,23 @@
                     <h3 class="card-title">إجراءات سريعة</h3>
                 </div>
                 <div style="padding: 20px;">
-                    <button onclick="resetEvaluations()" class="btn btn-danger">
-                        <i class="fas fa-redo-alt"></i> بدء دورة تقييم جديدة (أرشفة الحالي)
+                    <!-- حالة التقييم -->
+                    <div style="margin-bottom: 20px; padding: 15px; border-radius: 10px; background: #f8f9fa;">
+                        <span style="font-weight: bold;">حالة التقييم: </span>
+                        <span id="evaluationStatus" style="font-weight: bold;">جاري التحميل...</span>
+                    </div>
+
+                    <!-- أزرار التحكم -->
+                    <button id="openEvalBtn" onclick="openEvaluation()" class="btn"
+                        style="background: #2ecc71; color: white; margin-left: 10px;">
+                        <i class="fas fa-unlock"></i> فتح التقييم للطلاب
+                    </button>
+                    <button id="closeEvalBtn" onclick="closeEvaluation()" class="btn"
+                        style="background: #e74c3c; color: white; margin-left: 10px;">
+                        <i class="fas fa-lock"></i> قفل التقييم
+                    </button>
+                    <button onclick="resetEvaluations()" class="btn btn-danger" style="margin-left: 10px;">
+                        <i class="fas fa-redo-alt"></i> أرشفة التقييمات
                     </button>
                 </div>
             </div>
@@ -177,6 +192,9 @@
             document.getElementById('welcomeMessage').textContent = 'مرحباً: ' + firstName;
         }
 
+        // خريطة لتخزين مواد كل محاضر
+        let lecturersMap = {};
+
         // تحميل الإحصائيات
         async function loadStats() {
             // عدد الطلاب
@@ -190,6 +208,10 @@
             const lecturers = await LecturersAPI.getAll();
             if (lecturers.success) {
                 document.getElementById('lecturersCount').textContent = lecturers.data.length;
+                // تخزين المواد لكل محاضر
+                lecturers.data.forEach(l => {
+                    lecturersMap[l.lecturerId] = l.subjects && l.subjects.length > 0 ? l.subjects.join(' / ') : '';
+                });
             }
 
             // عدد المواد
@@ -216,14 +238,21 @@
             }
 
             const recent = evaluations.slice(-5).reverse();
-            tbody.innerHTML = recent.map((e, i) => `
+            tbody.innerHTML = recent.map((e, i) => {
+                // اقتطاع الإجابة لو طويلة
+                const answer = e.textAnswer || '';
+                const shortAnswer = answer.length > 50 ? answer.substring(0, 50) + '...' : answer;
+                // عرض كل المواد للمحاضر بدلاً من المادة الواحدة
+                const lecturerSubjects = lecturersMap[e.lecturerId] || e.subjectName || '-';
+
+                return `
                 <tr>
                     <td>${i + 1}</td>
                     <td>${e.lecturerName || ''}</td>
-                    <td>${e.subjectName || ''}</td>
-                    <td>${'★'.repeat(e.rating)}${'☆'.repeat(5 - e.rating)}</td>
+                    <td>${lecturerSubjects}</td>
+                    <td style="max-width: 300px;">${shortAnswer || '-'}</td>
                 </tr>
-            `).join('');
+            `}).join('');
         }
 
         // بدء التحميل
@@ -233,13 +262,72 @@
                 const result = await apiCall('/evaluations/Reset', 'POST');
                 if (result.success) {
                     showAlert(result.data.message);
+                    loadStats();
                 } else {
                     showAlert('حدث خطأ أثناء إعادة الضبط', 'danger');
                 }
             }
         }
 
+        // === التحكم في فتح/قفل التقييم ===
+        async function checkEvaluationStatus() {
+            const res = await apiCall('/settings/IsEvaluationOpen', 'GET');
+            console.log('Evaluation status response:', res);
+            if (res.success && res.data) {
+                updateEvaluationStatusUI(res.data.isOpen);
+            } else {
+                // في حالة الخطأ - نفترض مفتوح ونظهر الزرارين
+                console.error('Failed to get evaluation status:', res);
+                document.getElementById('evaluationStatus').innerHTML = '<span style="color: orange;">⚠️ غير محدد</span>';
+                document.getElementById('openEvalBtn').style.display = 'inline-block';
+                document.getElementById('closeEvalBtn').style.display = 'inline-block';
+            }
+        }
+
+        function updateEvaluationStatusUI(isOpen) {
+            const statusEl = document.getElementById('evaluationStatus');
+            const openBtn = document.getElementById('openEvalBtn');
+            const closeBtn = document.getElementById('closeEvalBtn');
+
+            if (isOpen) {
+                statusEl.innerHTML = '<span style="color: #2ecc71;">🟢 مفتوح</span>';
+                openBtn.style.display = 'none';
+                closeBtn.style.display = 'inline-block';
+            } else {
+                statusEl.innerHTML = '<span style="color: #e74c3c;">🔴 مغلق</span>';
+                openBtn.style.display = 'inline-block';
+                closeBtn.style.display = 'none';
+            }
+        }
+
+        async function openEvaluation() {
+            const confirmed = await showConfirm('هل تريد فتح التقييم للطلاب؟');
+            if (confirmed) {
+                const res = await apiCall('/settings/OpenEvaluation', 'POST');
+                if (res.success) {
+                    showAlert(res.data.message);
+                    updateEvaluationStatusUI(true);
+                } else {
+                    showAlert('حدث خطأ', 'danger');
+                }
+            }
+        }
+
+        async function closeEvaluation() {
+            const confirmed = await showConfirm('هل تريد قفل التقييم؟ لن يتمكن الطلاب من التقييم.');
+            if (confirmed) {
+                const res = await apiCall('/settings/CloseEvaluation', 'POST');
+                if (res.success) {
+                    showAlert(res.data.message);
+                    updateEvaluationStatusUI(false);
+                } else {
+                    showAlert('حدث خطأ', 'danger');
+                }
+            }
+        }
+
         loadStats();
+        checkEvaluationStatus();
     </script>
 </body>
 

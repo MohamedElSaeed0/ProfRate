@@ -52,6 +52,8 @@ namespace ProfRate.DTOs
         [Required(ErrorMessage = "الجنس مطلوب")]
         public string Gender { get; set; } = "Male"; // Male or Female
         
+        public int? AdminRating { get; set; } // تقييم الأدمن (0-100)
+        
         public int AdminId { get; set; }
     }
 
@@ -80,8 +82,9 @@ namespace ProfRate.DTOs
     {
         public int EvaluationId { get; set; }
         
-        [Range(1, 5, ErrorMessage = "التقييم يجب أن يكون بين 1 و 5")]
-        public byte Rating { get; set; }
+        [Required(ErrorMessage = "الإجابة مطلوبة")]
+        [MaxLength(400, ErrorMessage = "الإجابة يجب أن لا تتجاوز 400 حرف")]
+        public string TextAnswer { get; set; } = string.Empty;
         
         [Required]
         public int StudentId { get; set; }
@@ -138,6 +141,8 @@ namespace ProfRate.DTOs
         public string LastName { get; set; } = string.Empty;
         public string Username { get; set; } = string.Empty;
         public string Gender { get; set; } = string.Empty;
+        public int? AdminRating { get; set; } // تقييم الأدمن (0-100)
         public int AdminId { get; set; }
+        public List<string> Subjects { get; set; } = new List<string>(); // قائمة المواد التي يدرسها
     }
 }

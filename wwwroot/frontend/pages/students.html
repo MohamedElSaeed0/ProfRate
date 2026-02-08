@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1200">
-    <title>ProfRate - إدارة الطلاب</title>
+    <title>نظام تقييم المحاضرين - إدارة الطلاب</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -90,7 +90,7 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <h1><i class="fas fa-graduation-cap"></i> ProfRate</h1>
+                <h1><i class="fas fa-graduation-cap"></i> تقييم المحاضرين</h1>
                 <p>نظام تقييم المحاضرين</p>
             </div>
 
@@ -165,6 +165,12 @@
                         <i class="fas fa-plus"></i>
                         إضافة طالب
                     </button>
+                </div>
+
+                <!-- Student Count - Centered -->
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <span id="studentCount"
+                        style="font-size: 18px; font-weight: 600; color: #667eea; background: linear-gradient(135deg, #f0f4ff 0%, #e8eeff 100%); padding: 8px 20px; border-radius: 20px; display: inline-block;"></span>
                 </div>
 
                 <!-- Search Bar -->
@@ -247,14 +253,12 @@
                                     <th>#</th>
                                     <th>الطالب</th>
                                     <th>Username</th>
-                                    <th>المادة</th>
-                                    <th>المحاضر</th>
-                                    <th>إجراء</th>
+                                    <th>المواد المسجل فيها</th>
                                 </tr>
                             </thead>
                             <tbody id="assignmentsTable">
                                 <tr>
-                                    <td colspan="6" style="text-align: center;">جاري التحميل...</td>
+                                    <td colspan="4" style="text-align: center;">جاري التحميل...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -444,9 +448,12 @@
 
             if (!query) {
                 const info = result.data;
+                // Update student count at top
+                document.getElementById('studentCount').textContent = 'عدد الطلاب: ' + info.totalCount;
+
                 paginationDiv.innerHTML = `
                     <button class="btn btn-secondary btn-sm" ${!info.hasPrevious ? 'disabled' : ''} onclick="loadStudents('', ${currentPage - 1})">السابق</button>
-                    <span style="margin: 0 10px;">صفحة ${info.currentPage} من ${info.totalPages} (إجمالي: ${info.totalCount})</span>
+                    <span style="margin: 0 10px;">صفحة ${info.currentPage} من ${info.totalPages}</span>
                     <button class="btn btn-secondary btn-sm" ${!info.hasNext ? 'disabled' : ''} onclick="loadStudents('', ${currentPage + 1})">التالي</button>
                 `;
             } else {
@@ -596,29 +603,56 @@
             const tbody = document.getElementById('assignmentsTable');
 
             if (!result.success || result.data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">لا توجد تعيينات</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">لا توجد تعيينات</td></tr>';
                 return;
             }
 
             allAssignments = result.data;
 
-            tbody.innerHTML = result.data.map((a, i) => `
+            // Group by student
+            const grouped = {};
+            result.data.forEach(a => {
+                const studentId = a.studentId;
+                if (!grouped[studentId]) {
+                    grouped[studentId] = {
+                        student: a.student,
+                        subjects: []
+                    };
+                }
+                grouped[studentId].subjects.push({
+                    id: a.studentSubjectId,
+                    subjectName: a.subject?.subjectName || '',
+                    lecturerName: a.lecturer ? (a.lecturer.firstName + ' ' + a.lecturer.lastName) : 'غير محدد'
+                });
+            });
+
+            let index = 0;
+            tbody.innerHTML = Object.values(grouped).map(g => {
+                index++;
+                const subjectsList = g.subjects.map(s =>
+                    `<div style="padding: 5px 10px; margin: 3px 0; background: #f8f9fa; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                        <span><strong>${s.subjectName}</strong> - ${s.lecturerName}</span>
+                        <div>
+                            <button class="btn btn-primary btn-sm" onclick="editAssignment(${s.id})" style="padding: 3px 8px;"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteAssignment(${s.id})" style="padding: 3px 8px;"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>`
+                ).join('');
+
+                return `
                 <tr>
-                    <td>${i + 1}</td>
-                    <td>${a.student?.firstName || ''} ${a.student?.lastName || ''}</td>
-                    <td><code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">${a.student?.username || ''}</code></td>
-                    <td>${a.subject?.subjectName || ''}</td>
-                    <td>${a.lecturer ? (a.lecturer.firstName + ' ' + a.lecturer.lastName) : '<span style="color:red">غير محدد</span>'}</td>
+                    <td>${index}</td>
+                    <td>${g.student?.firstName || ''} ${g.student?.lastName || ''}</td>
+                    <td><code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">${g.student?.username || ''}</code></td>
                     <td>
-                        <button class="btn btn-primary btn-sm" onclick="editAssignment(${a.studentSubjectId})">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteAssignment(${a.studentSubjectId})">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                        <details style="cursor: pointer;">
+                            <summary style="color: #667eea; font-weight: 600;"><i class="fas fa-book"></i> ${g.subjects.length} مادة</summary>
+                            <div style="margin-top: 8px;">${subjectsList}</div>
+                        </details>
                     </td>
                 </tr>
-            `).join('');
+            `;
+            }).join('');
         }
 
         function closeEditModal() {

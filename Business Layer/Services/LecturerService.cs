@@ -18,7 +18,12 @@ namespace ProfRate.Services
         // الحصول على كل المحاضرين
         public async Task<List<Lecturer>> GetAllLecturers()
         {
-            return await _context.Lecturers.AsNoTracking().OrderBy(l => l.FirstName).ToListAsync();
+            return await _context.Lecturers
+                .Include(l => l.LecturerSubjects)
+                .ThenInclude(ls => ls.Subject)
+                .AsNoTracking()
+                .OrderBy(l => l.FirstName)
+                .ToListAsync();
         }
 
         // البحث عن محاضرين (بالاسم أو اسم المستخدم)
@@ -33,6 +38,8 @@ namespace ProfRate.Services
             query = System.Text.RegularExpressions.Regex.Replace(query, @"[^\w\s\u0600-\u06FF]", "");
 
             return await _context.Lecturers
+                .Include(l => l.LecturerSubjects)
+                .ThenInclude(ls => ls.Subject)
                 .AsNoTracking()
                 .Where(l => l.Username.Contains(query) ||
                             l.FirstName.Contains(query) ||
@@ -114,6 +121,21 @@ namespace ProfRate.Services
             _context.Lecturers.Remove(lecturer);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        // تحديث تقييم الأدمن للمحاضر
+        public async Task<Lecturer?> UpdateAdminRating(int id, int rating)
+        {
+            if (rating < 0 || rating > 100)
+                throw new InvalidOperationException("التقييم يجب أن يكون بين 0 و 100");
+
+            var lecturer = await _context.Lecturers.FindAsync(id);
+            if (lecturer == null) return null;
+
+            // لو التقييم 0، نعتبره reset ونخليه null
+            lecturer.AdminRating = rating == 0 ? null : rating;
+            await _context.SaveChangesAsync();
+            return lecturer;
         }
     }
 }

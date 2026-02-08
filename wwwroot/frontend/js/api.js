@@ -1,4 +1,4 @@
-// ===== ProfRate API Service =====
+// ===== نظام تقييم المحاضرين API Service =====
 
 const API_URL = '/api';
 // const API_URL = 'http://localhost:5176/api'; // استخدم هذا الرابط لو شغال Front-end Live Server بعيد عن الباك إند

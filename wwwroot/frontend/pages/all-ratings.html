@@ -4,16 +4,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1200">
-    <title>ProfRate - تقييمات كل المحاضرين</title>
+    <title>نظام تقييم المحاضرين - تقييمات كل المحاضرين</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .rating-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .rating-high {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .rating-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .rating-low {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .rating-none {
+            background: #e2e3e5;
+            color: #6c757d;
+        }
+    </style>
 </head>
 
 <body>
     <div class="app-container">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <h1><i class="fas fa-graduation-cap"></i> ProfRate</h1>
+                <h1><i class="fas fa-graduation-cap"></i> تقييم المحاضرين</h1>
                 <p>نظام تقييم المحاضرين</p>
             </div>
             <ul class="nav-menu">
@@ -41,14 +70,13 @@
                             <tr>
                                 <th>#</th>
                                 <th>المحاضر</th>
-                                <th>المادة</th>
-                                <th>متوسط التقييم</th>
-                                <th>عدد التقييمات</th>
+                                <th>التقييم (من 100)</th>
+                                <th>عدد الإجابات</th>
                             </tr>
                         </thead>
                         <tbody id="ratingsTable">
                             <tr>
-                                <td colspan="5" style="text-align: center;">جاري التحميل...</td>
+                                <td colspan="4" style="text-align: center;">جاري التحميل...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -68,28 +96,46 @@
         }
 
         async function loadRatings() {
-            const result = await EvaluationsAPI.getReport();
+            const lecturers = await LecturersAPI.getAll();
             const tbody = document.getElementById('ratingsTable');
 
-            if (!result.success || result.data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">لا توجد تقييمات بعد</td></tr>';
+            if (!lecturers.success || lecturers.data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">لا يوجد محاضرين</td></tr>';
                 return;
             }
 
-            tbody.innerHTML = result.data.map((r, i) => `
+            // حساب عدد الإجابات لكل محاضر
+            const allEvals = await EvaluationsAPI.getAll();
+            const evalCounts = {};
+            if (allEvals.success) {
+                allEvals.data.forEach(e => {
+                    const name = e.lecturerName;
+                    evalCounts[name] = (evalCounts[name] || 0) + 1;
+                });
+            }
+
+            tbody.innerHTML = lecturers.data.map((l, i) => {
+                const lecturerFullName = `${l.firstName} ${l.lastName}`;
+                const rating = l.adminRating || 0;
+                const count = evalCounts[lecturerFullName] || 0;
+
+                let ratingClass = 'rating-none';
+                if (rating > 0) {
+                    ratingClass = rating >= 70 ? 'rating-high' : rating >= 40 ? 'rating-medium' : 'rating-low';
+                }
+
+                return `
                 <tr>
                     <td>${i + 1}</td>
-                    <td>${r.lecturerName}</td>
-                    <td>${r.subjectName}</td>
+                    <td>${lecturerFullName}</td>
                     <td>
-                        <span style="color: ${r.averageRating >= 4 ? 'green' : r.averageRating >= 2.5 ? 'orange' : 'red'}; font-weight: bold;">
-                            ${r.averageRating.toFixed(1)} / 5
+                        <span class="rating-badge ${ratingClass}">
+                            ${rating > 0 ? rating + '/100' : 'لم يتم التقييم بعد'}
                         </span>
-                        <span style="color: gold;">${'★'.repeat(Math.round(r.averageRating))}</span>
                     </td>
-                    <td>${r.totalEvaluations}</td>
+                    <td>${count}</td>
                 </tr>
-            `).join('');
+            `}).join('');
         }
 
         loadRatings();
